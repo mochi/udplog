@@ -153,7 +153,7 @@ class TwistedLogHandler(logging.Handler):
 
             eventDict['isError'] = record.levelno >= logging.ERROR
 
-            if isinstance(record.args, dict):
+            if record.args and isinstance(record.args, dict):
                 eventDict.update(record.args)
 
             message = record.getMessage()
