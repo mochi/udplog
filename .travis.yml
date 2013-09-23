@@ -3,7 +3,6 @@ language: python
 python:
     - 2.6
     - 2.7
-    - pypy
 
 env:
   - TWISTED=svn+svn://svn.twistedmatrix.com/svn/Twisted/trunk PYOPENSSL=PyOpenSSL
@@ -19,6 +18,10 @@ env:
 
 install:
   - pip install $TWISTED --use-mirrors
+  - pip install simplejson --use-mirrors
+  - pip install txAMQP --use-mirrors
+  - pip install scribe --use-mirrors
+  - pip install thrift --use-mirrors
   - 'test -n "$PYOPENSSL" && pip install $PYOPENSSL --use-mirrors || true'
 
 script:
