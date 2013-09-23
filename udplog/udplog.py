@@ -225,8 +225,11 @@ class UDPLogHandler(logging.Handler):
             if isinstance(record.args, dict):
                 eventDict.update(record.args)
 
-            extra = {name: value for name, value in vars(record).iteritems()
-                                 if name not in _DEFAULT_LOGGING_ATTRIBUTES}
+            extra = {}
+            for name, value in vars(record).iteritems():
+                if name not in _DEFAULT_LOGGING_ATTRIBUTES:
+                    extra[name] = value
+
             eventDict.update(extra)
 
             # Format the message for its side effects and extract the message
