@@ -1,0 +1,6 @@
+include README.rst
+include NEWS
+include LICENSE
+include AUTHORS
+include udplog/amqp0-9-1.extended.xml
+include doc/examples/*.py
