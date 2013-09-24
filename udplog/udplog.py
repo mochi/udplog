@@ -225,10 +225,8 @@ class UDPLogHandler(logging.Handler):
             if isinstance(record.args, dict):
                 eventDict.update(record.args)
 
-            extra = {}
-            for name, value in vars(record).iteritems():
-                if name not in _DEFAULT_LOGGING_ATTRIBUTES:
-                    extra[name] = value
+            extra = {name: value for name, value in vars(record).iteritems()
+                     if name not in _DEFAULT_LOGGING_ATTRIBUTES}
 
             eventDict.update(extra)
 
