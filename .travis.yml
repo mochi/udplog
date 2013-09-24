@@ -11,6 +11,7 @@ env:
   - TWISTED=Twisted==12.1.0
 
 install:
+  - pip install pyflakes --use-mirrors
   - pip install $TWISTED --use-mirrors
   - pip install simplejson --use-mirrors
   - pip install txAMQP --use-mirrors
