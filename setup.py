@@ -58,6 +58,7 @@ setup(
         'simplejson',
         'Twisted >= 13.0.0',
         'txAMQP',
+        'txredis',
         'thrift',
         'scribe',
     ],

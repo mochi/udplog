@@ -15,6 +15,7 @@ install:
   - pip install $TWISTED --use-mirrors
   - pip install simplejson --use-mirrors
   - pip install txAMQP --use-mirrors
+  - pip install txredis --use-mirrors
   - pip install scribe --use-mirrors
   - pip install thrift --use-mirrors
 

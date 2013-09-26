@@ -31,11 +31,24 @@ class Options(usage.Options):
         ('rabbitmq-exchange', None, 'logs', 'RabbitMQ exchange'),
         ('rabbitmq-queue-size', None, 2500,
              'Maximum number of log events to buffer for RabbitMQ'),
+        ('redis-port', None, 6379, 'Redis port'),
+        ('redis-key', None, None, 'Redis list key'),
         ]
 
     optFlags = [
         ('verbose', 'v', 'Log all incoming messages')
         ]
+
+    def __init__(self):
+        super(Options, self).__init__()
+        self['redis-hosts'] = set()
+
+
+    def opt_redis_host(self, host):
+        """
+        Redis host. Repeat for round-robin dispatching.
+        """
+        self['redis-hosts'].add(host)
 
 
 
@@ -74,6 +87,12 @@ def makeService(config):
                                             config['rabbitmq-port'],
                                             factory)
         rabbitmqClient.setServiceParent(s)
+
+    # Set up Redis client.
+    if config['redis-hosts']:
+        from udplog import redis
+        redisService = redis.makeService(config, dispatcher)
+        redisService.setServiceParent(s)
 
     if config['verbose']:
         UDPLogToTwistedLog(dispatcher)
