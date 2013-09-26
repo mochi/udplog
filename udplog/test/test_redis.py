@@ -9,6 +9,7 @@ from __future__ import division, absolute_import
 
 import simplejson
 
+from twisted.application.internet import TCPClient
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -40,15 +41,34 @@ class RedisPublisherServiceTest(unittest.TestCase):
                                               "test_list")
 
 
-    def test_register(self):
+    def test_startService(self):
         """
         The publisher registers itself with the dispatcher.
         """
         event = {'message': 'test'}
-        self.dispatcher.eventReceived(event)
 
+        self.dispatcher.eventReceived(event)
+        self.assertEqual(0, len(self.client.pushes))
+
+        self.publisher.startService()
+
+        self.dispatcher.eventReceived(event)
         self.assertEqual(1, len(self.client.pushes))
 
+
+    def test_stopService(self):
+        """
+        The publisher registers itself with the dispatcher.
+        """
+        event = {'message': 'test'}
+
+        self.publisher.startService()
+        self.dispatcher.eventReceived(event)
+
+        self.publisher.stopService()
+
+        self.dispatcher.eventReceived(event)
+        self.assertEqual(1, len(self.client.pushes))
 
 
     def test_sendEvent(self):
@@ -264,3 +284,27 @@ class RedisPushMultiClientTest(unittest.TestCase):
                                  for i in xrange(50)])
         d.addCallback(onDisconnected)
         return d
+
+
+class MakeServiceTest(unittest.TestCase):
+    """
+    Tests for L{redis.makeService}.
+    """
+
+    def test_services(self):
+        """
+        The right type and number of services are created.
+        """
+        config = {'redis-hosts': set(['10.0.0.2', '10.0.0.3']),
+                  'redis-port': 6379,
+                  'redis-key': 'udplog'}
+        dispatcher = DispatcherFromUDPLogProtocol()
+        multiService = redis.makeService(config, dispatcher)
+        services = list(multiService)
+
+        self.assertEqual(3, len(services))
+
+        for service in services[:-1]:
+            self.assertIsInstance(service, TCPClient)
+
+        self.assertIsInstance(services[-1], redis.RedisPublisher)

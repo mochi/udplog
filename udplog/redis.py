@@ -14,8 +14,11 @@ import random
 
 import simplejson
 
+from twisted.application import internet, service
 from twisted.python import log
 from twisted.internet import defer
+
+from txredis.client import RedisClientFactory
 
 class NoClientError(Exception):
     """
@@ -24,7 +27,7 @@ class NoClientError(Exception):
 
 
 
-class RedisPublisher(object):
+class RedisPublisher(service.Service):
     """
     Publisher that pushes events to a Redis list.
     """
@@ -34,7 +37,15 @@ class RedisPublisher(object):
         self.client = client
         self.key = key
 
+
+    def startService(self):
+        service.Service.startService(self)
         self.dispatcher.register(self.sendEvent)
+
+
+    def stopService(self):
+        self.dispatcher.unregister(self.sendEvent)
+        service.Service.startService(self)
 
 
     def sendEvent(self, event):
@@ -44,15 +55,32 @@ class RedisPublisher(object):
             log.err(None, "Could not encode event to JSON")
             return
 
-        d = self.client.lpush(self.key, value)
+        try:
+            d = self.client.lpush(self.key, value)
+        except:
+            log.err()
         d.addErrback(lambda failure: failure.trap(NoClientError))
         d.addErrback(log.err)
 
 
 
 class RedisPushMultiClient(object):
+    """
+    Redis push client for round-robin dispatch to multiple clients.
+
+    This takes a list of client factories that are selected at random
+    to dispatch each single push. If a client is not (yet) connected, the
+    factory is taken out of the list of candidates, and re-added when
+    the a new connection has been made.
+    """
 
     def __init__(self, factories):
+        """
+        Initialize.
+
+        @param factories: Client factories.
+        @type factories: C{list} of L{RedisClientFactory}.
+        """
         self.factories = set(factories)
 
 
@@ -72,6 +100,17 @@ class RedisPushMultiClient(object):
 
 
     def lpush(self, key, *values, **kwargs):
+        """
+        Add string to head of list.
+
+        This selects a factory and attempts a push there, falling back to
+        others until none are left. In that case, L{NoClientError} is fired
+        from the returned deferred.
+
+        @param key: List key
+        @param values: Sequence of values to push
+        @param value: For backwards compatibility, a single value.
+        """
         def eb(failure):
             failure.trap(RuntimeError)
             if failure.value.args == ("Not connected",):
@@ -91,3 +130,27 @@ class RedisPushMultiClient(object):
             return self.lpush(key, *values, **kwargs)
         d.addErrback(eb)
         return d
+
+
+def makeService(config, dispatcher):
+    """
+    Set up Redis client services.
+    """
+    s = service.MultiService()
+
+    factories = []
+
+    for host in config['redis-hosts']:
+        factory = RedisClientFactory()
+        factories.append(factory)
+        tcpClient = internet.TCPClient(host,
+                                       config['redis-port'],
+                                       factory)
+        tcpClient.setServiceParent(s)
+
+    client = RedisPushMultiClient(factories)
+
+    publisher = RedisPublisher(dispatcher, client, config['redis-key'])
+    publisher.setServiceParent(s)
+
+    return s
