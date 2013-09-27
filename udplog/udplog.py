@@ -252,6 +252,69 @@ class UDPLogHandler(logging.Handler):
 
 
 
+class ConfigurableUDPLogHandler(UDPLogHandler):
+    """
+    Configurable UDPLog logging handler.
+
+    This is a convenience subclass of UDPLogHandler for use in logging
+    configuration files (see L{logging.config.fileConfig})::
+
+        [loggers]
+        keys = root
+
+        [handlers]
+        keys = udplog
+
+        [formatters]
+        keys =
+
+        [logger_root]
+        level = INFO
+        handlers = udplog
+
+        [handler_udplog]
+        class = udplog.udplog.ConfigurableUDPLogHandler
+        level = INFO
+        args = ({'appname': 'example'},)
+
+    @note: This is a subclass instead of a factory function because
+        L{logging.config} requires this.
+    """
+
+
+    def __init__(self, defaultFields=None, category='python_logging',
+                       host=DEFAULT_HOST, port=DEFAULT_PORT,
+                       includeHostname=True):
+        """
+        Set up a UDPLogHandler with a UDPLogger.
+
+        @param defaultFields: Mapping of default fields to include in all
+            events.
+        @type defaultFields: L{dict}.
+
+        @param category: The UDPLog category.
+        @type category: L{bytes}.
+
+        @param host: The UDP host to send to.
+        @type host: L{bytes}.
+
+        @param port: The UDP port to send to.
+        @type host: L{int}.
+
+        @param includeHostname: If set, the default fields include a
+            C{'hostname'} field set to the current hostname.
+        @type includeHostname: L{bool}.
+        """
+        defaultFields = defaultFields or {}
+
+        if includeHostname:
+            defaultFields.setdefault('hostname', socket.gethostname())
+
+        logger = UDPLogger(host=host, port=port, defaultFields=defaultFields)
+        UDPLogHandler.__init__(self, logger, category)
+
+
+
 def main():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind((DEFAULT_HOST, DEFAULT_PORT))

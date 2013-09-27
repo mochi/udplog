@@ -323,3 +323,36 @@ class UDPLogHandlerTest(unittest.TestCase):
         category, eventDict = self.udplogger.logged[-1]
         self.assertIn('foo', eventDict)
         self.assertEqual('bar', eventDict['foo'])
+
+
+
+class UDPLogHandlerFactoryTest(unittest.TestCase):
+    """
+    Tests for L{udplog.ConfigurableUDPLogHandler}.
+    """
+
+    def test_argsDefaults(self):
+        """
+        Without arguments, the logger and handler have their defaults.
+        """
+        handler = udplog.ConfigurableUDPLogHandler()
+        logger = handler.logger
+
+        self.assertEquals('python_logging', handler.category)
+        self.assertEquals(('127.0.0.1', 55647), logger.socket.getpeername())
+        self.assertEquals({'hostname': socket.gethostname()},
+                          logger.defaultFields)
+
+
+    def test_args(self):
+        """
+        All arguments are passed on.
+        """
+        handler = udplog.ConfigurableUDPLogHandler({'foo': 'bar'}, 'test',
+                                                   '10.0.0.1', 55648, False)
+        logger = handler.logger
+
+        self.assertEquals('test', handler.category)
+        self.assertEquals(('10.0.0.1', 55648), logger.socket.getpeername())
+        self.assertNotIn('hostname', logger.defaultFields)
+        self.assertEquals('bar', logger.defaultFields['foo'])
