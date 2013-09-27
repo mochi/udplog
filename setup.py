@@ -29,9 +29,11 @@ def read(fname):
 
 setup(
     name = "udplog",
-    version = "0.0.1",
-    author = "Mochi Media, Ralph Meijer",
-    author_email = "dev@mochimedia.com, ralphm@ik.nu",
+    version = "0.1.0",
+    author = "Mochi Media",
+    author_email = "dev@mochimedia.com",
+    maintainer = "Ralph Meijer",
+    maintainer_email = "ralphm@ik.nu",
     description = ("UDPLog is a system for emitting application log events"
                    " via UDP and shipping them via RabbitMQ or Scribe for "
                    "further processing."),
