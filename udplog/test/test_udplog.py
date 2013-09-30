@@ -72,7 +72,7 @@ class UDPLoggerTest(unittest.TestCase):
         If eventDict is not a dict, TypeError is raised.
         """
         logger = udplog.UDPLogger()
-        self.assertRaises(TypeError, logger.log, 'acategory', 1)
+        self.assertRaises(AttributeError, logger.log, 'acategory', 1)
 
 
     def test_logObjects(self):
@@ -197,6 +197,38 @@ class UDPLoggerTest(unittest.TestCase):
         self.assertRegexpMatches(
             sys.stderr.getvalue(),
             r'^Failed to send udplog message\n.*Message too long')
+
+
+    def test_logTooLongTimestamp(self):
+        """
+        If the log event is too long, the warning has a timestamp.
+        """
+        logger = udplog.UDPLogger()
+        self._catchOutput(logger)
+
+        logger.log('atest', {u'message': u'a' * self.MAX_DATAGRAM_SIZE,
+                             u'timestamp': 1357328823.75116})
+
+        self.assertEqual(1, len(self.output))
+        category, eventDict = udplog.unserialize(self.output[0])
+
+        self.assertIn('timestamp', eventDict)
+
+
+    def test_logTooLongDefault(self):
+        """
+        If the log event is too long, the warning has default fields.
+        """
+        logger = udplog.UDPLogger(defaultFields={'foo': 'bar'})
+        self._catchOutput(logger)
+
+        logger.log('atest', {u'message': u'a' * self.MAX_DATAGRAM_SIZE,
+                             u'timestamp': 1357328823.75116})
+
+        self.assertEqual(1, len(self.output))
+        category, eventDict = udplog.unserialize(self.output[0])
+
+        self.assertIn('foo', eventDict)
 
 
     def test_augmentTimestamp(self):
