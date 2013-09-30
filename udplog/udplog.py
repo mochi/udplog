@@ -98,11 +98,12 @@ class UDPLogger(object):
 
 
     def augment(self, eventDict):
-        newEventDict = {}
-        newEventDict.setdefault('timestamp', time.time())
-        newEventDict.update(self.defaultFields)
-        newEventDict.update(eventDict)
-        return newEventDict
+        """
+        Augment the event dictionary with timestamp and default fields.
+        """
+        eventDict.setdefault('timestamp', time.time())
+        for key, value in self.defaultFields.iteritems():
+            eventDict.setdefault(key, value)
 
 
     def serialize(self, category, eventDict):
@@ -155,6 +156,7 @@ class UDPLogger(object):
 
         newEventDict['original_size'] = size
 
+        self.augment(newEventDict)
         return self.serialize('udplog', newEventDict)
 
 
@@ -172,7 +174,7 @@ class UDPLogger(object):
             to a string before adding them to the event dictionary.
         @type eventDict: C{dict}
         """
-        eventDict = self.augment(eventDict)
+        self.augment(eventDict)
         data = self.serialize(category, eventDict)
 
         try:
