@@ -348,12 +348,12 @@ class UDPLogHandlerTest(unittest.TestCase):
 
     def test_emitExceptionWithoutContext(self):
         """
-        Logging an exception without context excludes exc_info.
+        Logging an exception without context succeeds.
 
         If L{logging.Logger.exception} is called outside of an C{except} block,
         exception context might be lost. The result of the internal call to
         C{sys.exc_info} then yields a tuple of three C{None}s, which should
-        simply result in the corresponding fields being empty.
+        simply result in the C{excValue} being C{'None'}.
         """
         self.logger.exception('Oops')
 
