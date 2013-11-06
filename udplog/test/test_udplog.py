@@ -346,6 +346,27 @@ class UDPLogHandlerTest(unittest.TestCase):
         self.assertTrue(eventDict.get('excText').startswith('Traceback'))
 
 
+    def test_emitExceptionWithoutContext(self):
+        """
+        Logging an exception without context succeeds.
+
+        If L{logging.Logger.exception} is called outside of an C{except} block,
+        exception context might be lost. The result of the internal call to
+        C{sys.exc_info} then yields a tuple of three C{None}s, which should
+        simply result in the C{excValue} being C{'None'}.
+        """
+        self.logger.exception('Oops')
+
+        self.assertEqual(1, len(self.udplogger.logged))
+        _, eventDict = self.udplogger.logged[-1]
+
+        self.assertEqual('Oops', eventDict.get('message'))
+        self.assertEqual('ERROR', eventDict.get('logLevel'))
+        self.assertIdentical('NoneType', eventDict.get('excType'))
+        self.assertEqual('None', eventDict.get('excValue'))
+        self.assertIdentical(None, eventDict['excText'])
+
+
     def test_emit_extra(self):
         """
         Values passed in the extra keyword argument are added to the eventDict.

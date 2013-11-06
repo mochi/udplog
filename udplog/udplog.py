@@ -237,9 +237,14 @@ class UDPLogHandler(logging.Handler):
             self.format(record)
             eventDict['message'] = record.message
             if record.exc_info:
-                eventDict['excText'] = record.exc_text
-                eventDict['excType'] = reflect.qual(record.exc_info[0])
-                eventDict['excValue'] = reflect.safe_str(record.exc_info[1])
+                excType, excValue = record.exc_info[0:2]
+                eventDict['excValue'] = reflect.safe_str(excValue)
+                if excValue is None:
+                    eventDict['excText'] = None
+                    eventDict['excType'] = 'NoneType'
+                else:
+                    eventDict['excText'] = record.exc_text
+                    eventDict['excType'] = reflect.qual(excType)
 
             # Extract the category, possibly overridden from record.args.
             category =  eventDict['category']
