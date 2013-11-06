@@ -364,7 +364,7 @@ class UDPLogHandlerTest(unittest.TestCase):
         self.assertEqual('ERROR', eventDict.get('logLevel'))
         self.assertIdentical('NoneType', eventDict.get('excType'))
         self.assertEqual('None', eventDict.get('excValue'))
-        self.assertIdentical(None, eventDict.get('excText'))
+        self.assertIdentical(None, eventDict['excText'])
 
 
     def test_emit_extra(self):
