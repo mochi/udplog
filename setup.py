@@ -29,7 +29,7 @@ def read(fname):
 
 setup(
     name = "udplog",
-    version = "0.1.0",
+    version = "0.1.1",
     author = "Mochi Media",
     author_email = "dev@mochimedia.com",
     maintainer = "Ralph Meijer",

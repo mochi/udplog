@@ -1,3 +1,14 @@
+0.1.1 (2013-11-07)
+==================
+
+Fixes
+-----
+
+ - If sending an event over UDP fails, the failure notice that is sent now
+   has a timestamp and the default fields. (#5)
+ - Rendering an event with empty exc_info data no longer fails (#6).
+
+
 0.1.0 (2013-09-27)
 ==================
 
