@@ -7,8 +7,6 @@ Tests for L{udplog.datadog}.
 
 from __future__ import division, absolute_import
 
-import simplejson
-
 from twisted.internet import defer
 from twisted.trial import unittest
 
