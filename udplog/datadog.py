@@ -44,7 +44,7 @@ def cbDebugRequest(response):
     log.msg('Response phrase:'+str(response.phrase))
     log.msg('Response headers:'+str(list(response.headers.getAllRawHeaders())))
     finished = defer.Deferred()
-    response.deliverBody(HTTPPrinter(finished))
+    response.deliverBody(DebugPrinter(finished))
     return finished
 
 
