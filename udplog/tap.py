@@ -102,6 +102,6 @@ def makeService(config):
     if config['dd-api-key']:
         from udplog import datadog
         dataDogService = datadog.makeService(config, dispatcher)
-        dataDogServer.setServiceParent(s)
+        dataDogService.setServiceParent(s)
 
     return s
