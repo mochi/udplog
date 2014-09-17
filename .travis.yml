@@ -4,11 +4,12 @@ python:
     - 2.7
 
 env:
-  - TWISTED=svn+svn://svn.twistedmatrix.com/svn/Twisted/trunk
+  - TWISTED=Twisted==14.0.0
   - TWISTED=Twisted==13.0.0
   - TWISTED=Twisted==12.3.0
   - TWISTED=Twisted==12.2.0
   - TWISTED=Twisted==12.1.0
+  - TWISTED=svn+svn://svn.twistedmatrix.com/svn/Twisted/trunk
 
 install:
   - pip install pyflakes --use-mirrors
