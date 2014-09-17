@@ -14,7 +14,7 @@ from zope.interface import implements
 
 from twisted.application import service
 from twisted.python import log
-from twisted.internet import defer, reactor
+from twisted.internet import defer, reactor, protocol
 
 from twisted.web.iweb import IBodyProducer
 
@@ -22,6 +22,32 @@ from twisted.web import client as web_client, http_headers
 
 
 API_URL='https://app.datadoghq.com/api/v1/events'
+
+class DebugPrinter(protocol.Protocol):
+    def __init__(self, finished):
+        self.finished = finished
+        self.remaining = 1024 * 10
+
+    def dataReceived(self, bytes):
+        if self.remaining:
+            display = bytes[:self.remaining]
+            log.msg('Some data received:' + str(display))
+            self.remaining -= len(display)
+
+    def connectionLost(self, reason):
+        log.msg('Finished receiving body:'+str(reason.getErrorMessage()))
+        self.finished.callback(None)
+
+def cbRequest(response):
+    log.msg('Response version:'+str(response.version))
+    log.msg('Response code:'+str(response.code))
+    log.msg('Response phrase:'+str(response.phrase))
+    log.msg('Response headers:'+str(list(response.headers.getAllRawHeaders())))
+    finished = defer.Deferred()
+    response.deliverBody(HTTPPrinter(finished))
+    return finished
+
+
 
 class DataDogClient(object):
     def __init__(self, api_key, application_key = None):
@@ -62,7 +88,17 @@ class DataDogPublisher(service.Service):
 
 
     def sendEvent(self, event):
-        
+        # title MUST be set
+        if not event.has_key('title'):
+            event['title'] = event.get('category', 'default')
+        # priority should be set
+        if not event.has_key('priority'):
+            ## TODO - map this to logLevel
+            event['priority'] = 'normal'
+        # text should be set
+        if not event.has_key('text'):
+            event['text'] = event.get('message', '')
+
         try:
             d = self.client.send_event(event)
             d.addErrback(log.err)
