@@ -24,16 +24,19 @@ from twisted.web import client as web_client, http_headers
 API_URL='https://app.datadoghq.com/api/v1/events'
 
 class DataDogClient(object):
-    def __init__(self, api_key, application_key):
+    def __init__(self, api_key, application_key = None):
         self.api_key = api_key
         self.application_key = application_key
 
     def send_event(self, event):
         headers = http_headers.Headers(
             {'Content-Type': ['application/json']})
+        url = API_URL+'?api_key='+self.api_key
+        if self.application_key:
+            url += "&application_key="+self.application_key
         d = web_client.Agent(reactor).request(
             'POST',
-            API_URL+'?api_key='+self.api_key,
+            url,
             headers=headers,
             bodyProducer=JSONProducer(event))
         return d
