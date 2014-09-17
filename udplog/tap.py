@@ -99,4 +99,9 @@ def makeService(config):
     if config['verbose']:
         UDPLogToTwistedLog(dispatcher)
 
+    if config['dd-api-key']:
+        from udplog import datadog
+        dataDogService = datadog.makeService(config, dispatcher)
+        dataDogServer.setServiceParent(s)
+
     return s
