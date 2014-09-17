@@ -38,7 +38,7 @@ class DebugPrinter(protocol.Protocol):
         log.msg('Finished receiving body:'+str(reason.getErrorMessage()))
         self.finished.callback(None)
 
-def cbRequest(response):
+def cbDebugRequest(response):
     log.msg('Response version:'+str(response.version))
     log.msg('Response code:'+str(response.code))
     log.msg('Response phrase:'+str(response.phrase))
@@ -48,11 +48,11 @@ def cbRequest(response):
     return finished
 
 
-
 class DataDogClient(object):
-    def __init__(self, api_key, application_key = None):
+    def __init__(self, api_key, application_key = None, verbose = False):
         self.api_key = api_key
         self.application_key = application_key
+        self.verbose = verbose
 
     def send_event(self, event):
         headers = http_headers.Headers(
@@ -65,6 +65,8 @@ class DataDogClient(object):
             url,
             headers=headers,
             bodyProducer=JSONProducer(event))
+        if self.verbose:
+            d.addCallback(cbDebugRequest)
         return d
 
 class DataDogPublisher(service.Service):
@@ -129,7 +131,8 @@ def makeService(config, dispatcher):
     """
     s = service.MultiService()
     client = DataDogClient(config['dd-api-key'],
-                           config['dd-application-key'])
+                           config['dd-application-key'],
+                           config.get('verbose', False))
     publisher = DataDogPublisher(dispatcher,
                                  client)
     publisher.setServiceParent(s)
