@@ -32,7 +32,7 @@ class DataDogClient(object):
     def send_event(self, event):
         headers = http_headers.Headers(
             {'Content-Type': ['application/json']}),
-        d = client.Agent(reactor).request(
+        d = web_client.Agent(reactor).request(
             'POST',
             API_URL+'?api_key='+self.api_key,
             headers,
