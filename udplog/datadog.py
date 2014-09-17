@@ -12,7 +12,7 @@ import simplejson
 
 from zope.interface import implements
 
-from twisted.application import internet, service
+from twisted.application import service
 from twisted.python import log
 from twisted.internet import defer, reactor
 
