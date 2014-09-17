@@ -33,6 +33,8 @@ class Options(usage.Options):
              'Maximum number of log events to buffer for RabbitMQ'),
         ('redis-port', None, 6379, 'Redis port'),
         ('redis-key', None, None, 'Redis list key'),
+        ('dd-api-key', None, None, 'DataDog API Key'),
+        ('dd-application-key', None, None, 'DataDog Application Key')
         ]
 
     optFlags = [
