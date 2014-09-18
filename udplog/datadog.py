@@ -9,6 +9,7 @@ This provides a Twisted based publisher to datadog API endpoints.
 from __future__ import division, absolute_import
 
 import simplejson
+import time
 
 from zope.interface import implements
 
@@ -89,22 +90,23 @@ class DataDogPublisher(service.Service):
         service.Service.startService(self)
 
 
-    def sendEvent(self, event):
-        if not event.has_key('tags'):
-            event['tags'] = ''
-            for key, value in event.iteritems():
-                event['tags'] += str(key)+":"+str(value)+","
-            event['tags'] += 'emitter:udplog'
-        # title MUST be set
-        if not event.has_key('title'):
-            event['title'] = event.get('category', 'default')
-        # priority should be set
-        if not event.has_key('priority'):
-            ## TODO - map this to logLevel
-            event['priority'] = 'normal'
+    def sendEvent(self, udp_event):
+        accepted_tags = ['category', 'timestamp', 'node']
+        event = {}
         # text should be set
-        if not event.has_key('text'):
-            event['text'] = event.get('message', simplejson.dumps(event))
+        event['text'] = udp_event.get('message', simplejson.dumps(udp_event))
+        event['date_happened'] = udp_event.get('timestamp', time.time())
+        event['tags'] = ''
+        for key, value in udp_event.iteritems():
+            if key not in accepted_tags:
+                continue
+            event['tags'] += str(key)+":"+str(value)+","
+        event['tags'] += 'emitter:udplog'
+        # title MUST be set
+        event['title'] = udp_event.get('category', 'default')
+        # priority should be set
+        ## TODO - map this to logLevel
+        event['priority'] = 'normal'
 
         try:
             d = self.client.send_event(event)
