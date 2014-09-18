@@ -123,6 +123,7 @@ class JSONProducer(object):
         self.length = len(self.body)
 
     def startProducing(self, consumer):
+        log.msg("RAW JSON:"+ self.body)
         consumer.write(self.body)
         return defer.succeed(None)
 
