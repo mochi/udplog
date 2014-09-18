@@ -59,7 +59,7 @@ def makeService(config):
     # Set up UDP server as the dispatcher.
     dispatcher = DispatcherFromUDPLogProtocol()
 
-    udplogServer = internet.UDPServer(port=config['udplog-port'],
+    udplogServer = internet.UDPServer(port=int(config['udplog-port']),
                                       protocol=dispatcher,
                                       interface=config['udplog-interface'],
                                       maxPacketSize=65536)
@@ -71,7 +71,7 @@ def makeService(config):
         factory = UDPLogClientFactory(scribe.ScribeProtocol,
                                       dispatcher)
         scribeClient = internet.TCPClient(config['scribe-host'],
-                                          config['scribe-port'],
+                                          int(config['scribe-port']),
                                           factory)
         scribeClient.setServiceParent(s)
 
@@ -84,7 +84,7 @@ def makeService(config):
             exchange=config['rabbitmq-exchange'],
             queueSize=config['rabbitmq-queue-size'])
         rabbitmqClient = internet.TCPClient(config['rabbitmq-host'],
-                                            config['rabbitmq-port'],
+                                            int(config['rabbitmq-port']),
                                             factory)
         rabbitmqClient.setServiceParent(s)
 
