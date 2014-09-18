@@ -90,6 +90,11 @@ class DataDogPublisher(service.Service):
 
 
     def sendEvent(self, event):
+        if not event.has_key('tags'):
+            event['tags'] = ''
+            for key, value in event.iteritems():
+                event['tags'] += key+":"+value+","
+            event['tags'] += 'emitter:udplog'
         # title MUST be set
         if not event.has_key('title'):
             event['title'] = event.get('category', 'default')
@@ -99,7 +104,7 @@ class DataDogPublisher(service.Service):
             event['priority'] = 'normal'
         # text should be set
         if not event.has_key('text'):
-            event['text'] = event.get('message', '')
+            event['text'] = event.get('message', simplejson.dumps(event))
 
         try:
             d = self.client.send_event(event)
