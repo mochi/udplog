@@ -58,8 +58,8 @@ class DataDogClient(object):
         headers = http_headers.Headers(
             {'Content-Type': ['application/json']})
         url = API_URL+'?api_key='+self.api_key
-        if self.application_key:
-            url += "&application_key="+self.application_key
+        #if self.application_key:
+        #    url += "&application_key="+self.application_key
         d = web_client.Agent(reactor).request(
             'POST',
             url,
@@ -93,7 +93,7 @@ class DataDogPublisher(service.Service):
         if not event.has_key('tags'):
             event['tags'] = ''
             for key, value in event.iteritems():
-                event['tags'] += key+":"+value+","
+                event['tags'] += str(key)+":"+str(value)+","
             event['tags'] += 'emitter:udplog'
         # title MUST be set
         if not event.has_key('title'):
