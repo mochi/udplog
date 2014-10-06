@@ -75,8 +75,10 @@ class DataDogPublisherServiceTest(unittest.TestCase):
         self.publisher.sendEvent(event)
 
         output = self.client.events[-1]
-        for key in event.iterkeys():
-            self.assertEqual(event[key], output[key])
+        self.assertEqual(output['priority'], 'normal')
+        self.assertEqual(output['title'], 'test')
+        self.assertEqual(output['tags'], 'category:test,timestamp:1340634165,emitter:udplog')
+        self.assertTrue(output.has_key('date_happened'))
 
 
 
