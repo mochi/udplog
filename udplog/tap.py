@@ -61,7 +61,7 @@ def makeService(config):
     # Set up UDP server as the dispatcher.
     dispatcher = DispatcherFromUDPLogProtocol()
 
-    udplogServer = internet.UDPServer(port=int(config['udplog-port']),
+    udplogServer = internet.UDPServer(port=config['udplog-port'],
                                       protocol=dispatcher,
                                       interface=config['udplog-interface'],
                                       maxPacketSize=65536)
