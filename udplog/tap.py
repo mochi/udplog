@@ -20,18 +20,18 @@ from udplog import udplog
 class Options(usage.Options):
     optParameters = [
         ('udplog-interface', None, udplog.DEFAULT_HOST, 'UDPLog interface'),
-        ('udplog-port', None, udplog.DEFAULT_PORT, 'UDPLog port'),
+        ('udplog-port', None, udplog.DEFAULT_PORT, 'UDPLog port', int),
 
         ('scribe-host', None, None, 'Scribe Thrift host'),
-        ('scribe-port', None, 1463, 'Scribe Thrift port'),
+        ('scribe-port', None, 1463, 'Scribe Thrift port', int),
 
         ('rabbitmq-host', None, None, 'RabbitMQ host'),
-        ('rabbitmq-port', None, 5672, 'RabbitMQ host'),
+        ('rabbitmq-port', None, 5672, 'RabbitMQ host', int),
         ('rabbitmq-vhost', None, '/', 'RabbitMQ virtual host'),
         ('rabbitmq-exchange', None, 'logs', 'RabbitMQ exchange'),
         ('rabbitmq-queue-size', None, 2500,
-             'Maximum number of log events to buffer for RabbitMQ'),
-        ('redis-port', None, 6379, 'Redis port'),
+             'Maximum number of log events to buffer for RabbitMQ', int),
+        ('redis-port', None, 6379, 'Redis port', int),
         ('redis-key', None, None, 'Redis list key'),
         ]
 
