@@ -63,5 +63,6 @@ setup(
         'txredis',
         'thrift',
         'scribe',
+        'python-dateutil',
     ],
 )
