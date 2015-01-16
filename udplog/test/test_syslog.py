@@ -173,3 +173,37 @@ class ParseSyslogTests(TestCase):
         line = "something"
         result = syslog.parseSyslog(line, self.tz)
         self.assertEquals('something', result['message'])
+
+
+    def test_cee(self):
+        """
+        If there's a CEE structure in the message, its fields are merged in.
+        """
+        line = ('<13>Jan 16 21:00:00 waar ralphm: '
+                'blah @cee: {"event": "started"}')
+        result = syslog.parseSyslog(line, self.tz)
+        self.assertEquals('blah', result['message'])
+        self.assertEquals('started', result['event'])
+
+
+    def test_ceeInvalid(self):
+        """
+        If the CEE structure is invalid, the message field includes it.
+        """
+        line = ('<13>Jan 16 21:00:00 waar ralphm: '
+                'blah @cee: {"event": "started}')
+        result = syslog.parseSyslog(line, self.tz)
+        self.assertEquals('blah @cee: {"event": "started}', result['message'])
+        self.assertNotIn('event', result)
+        self.assertEqual(1, len(self.flushLoggedErrors(ValueError)))
+
+
+    def test_ceeEmptyMessage(self):
+        """
+        If the message starts with the CEE marker, the message is empty.
+        """
+        line = ('<13>Jan 16 21:00:00 waar ralphm: '
+                '@cee: {"event": "started"}')
+        result = syslog.parseSyslog(line, self.tz)
+        self.assertEquals('', result['message'])
+        self.assertEquals('started', result['event'])

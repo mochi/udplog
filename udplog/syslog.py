@@ -13,6 +13,7 @@ further shipping similar to the native udplog protocol.
 from __future__ import division, absolute_import
 
 import calendar
+import json
 import re
 
 from dateutil.parser import parse
@@ -51,7 +52,7 @@ RE_SYSLOG = re.compile(
     (?P<timestamp>\w\w\w[ ][ 123456789]\d[ ]\d\d:\d\d:\d\d)[ ]
     (?P<hostname>\w+)[ ]
     (?P<tag>\w+)(\[(?P<pid>\d+)\])?:[ ]?
-    (?P<message>.*)
+    (?P<content>(?P<message>.*?)([ ]?@cee:[ ](?P<cee>.*))?)
     $
     """,
     re.IGNORECASE | re.VERBOSE)
@@ -97,6 +98,11 @@ def parseSyslog(line, tzinfo):
     directly following the tag, the C{'pid'} key will be absent. For invalid
     priority values, the C{'facility'} and C{'severity'} fields will be empty.
 
+    If the message has the C{'@cee:'} marker, the rest of the message
+    is interpreted as a JSON object and merged into the resulting event
+    dictionary. See U{Mitre CEE<https://cee.mitre.org/>}. Note that no
+    attempt is made to interpret the field names.
+
     @param line: Syslog log message.
     @type line: C{unicode}
 
@@ -135,6 +141,15 @@ def parseSyslog(line, tzinfo):
         if match.group('pid'):
             eventDict['pid'] = match.group('pid')
         eventDict['message'] = match.group('message')
+
+        if match.group('cee'):
+            try:
+                cee = json.loads(match.group('cee'))
+            except:
+                log.err()
+                eventDict['message'] = match.group('content')
+            else:
+                eventDict.update(cee)
     else:
         eventDict['message'] = line
 
