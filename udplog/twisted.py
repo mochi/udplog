@@ -1,4 +1,4 @@
-# -*- test-case-name: udplog.test.test_scribe -*-
+# -*- test-case-name: udplog.test.test_twisted -*-
 #
 # Copyright (c) Mochi Media, Inc.
 # Copyright (c) Ralph Meijer.

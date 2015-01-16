@@ -1,3 +1,12 @@
+# Copyright (c) Ralph Meijer.
+# See LICENSE for details.
+
+"""
+Tests for L{udplog.syslog}.
+"""
+
+from __future__ import division, absolute_import
+
 from dateutil import tz
 import datetime
 
@@ -6,17 +15,43 @@ from twisted.trial.unittest import TestCase
 from udplog import syslog
 
 class ParsePriorityTests(TestCase):
+    """
+    Tests for L{syslog.parsePriority}.
+    """
 
     def test_priority13(self):
+        """
+        Priority of 13 means facility user, severity notice.
+        """
         self.assertEquals(('user', 'notice'), syslog.parsePriority(13))
 
 
     def test_priority29(self):
+        """
+        Priority of 29 means facility daemon, severity notice.
+        """
         self.assertEquals(('daemon', 'notice'), syslog.parsePriority(29))
+
+
+    def test_priority191(self):
+        """
+        191 is the highest valid priority value.
+        """
+        self.assertEquals(('local7', 'debug'), syslog.parsePriority(191))
+
+
+    def test_priority192(self):
+        """
+        Priority cannot exceed 191.
+        """
+        self.assertRaises(IndexError, syslog.parsePriority, 192)
 
 
 
 class ParseSyslogTests(TestCase):
+    """
+    Tests for L{syslog.parseSyslog}.
+    """
 
     def setUp(self):
         self.tz = tz.gettz('Europe/Amsterdam')
@@ -30,6 +65,16 @@ class ParseSyslogTests(TestCase):
         result = syslog.parseSyslog(line, self.tz)
         self.assertEquals('user', result['facility'])
         self.assertEquals('notice', result['severity'])
+
+
+    def test_priorityInvalid(self):
+        """
+        The C{'facility'} and C{'severity'} are omitted for invalid priorities.
+        """
+        line = "<192>Jan 15 16:59:26 myhost test: hello"
+        result = syslog.parseSyslog(line, self.tz)
+        self.assertNotIn('facility', result)
+        self.assertNotIn('severity', result)
 
 
     def test_message(self):

@@ -1,4 +1,16 @@
-from __future__ import absolute_import
+# -*- test-case-name: udplog.test.test_syslog -*-
+#
+# Copyright (c) Ralph Meijer.
+# See LICENSE for details.
+
+"""
+Syslog server support.
+
+This provides support for receiving syslog messages and utilities for
+further shipping similar to the native udplog protocol.
+"""
+
+from __future__ import division, absolute_import
 
 import re
 
@@ -38,9 +50,11 @@ def parsePriority(priority):
     @param priority: Syslog priority. Between 0 and 191.
     @type priority: L{int}
 
-    @return: Tuple of facility and severity names. See L{FACILITIES} and
-        L{SEVERITIES}.
+    @return: Tuple of facility and severity names. See C{FACILITIES} and
+        C{SEVERITIES}.
     @rtype: L{tuple} of L{unicode}
+
+    @raise: L{IndexError} for invalid priority values.
     """
     facility, severity = divmod(priority, 8)
     return FACILITIES[facility], SEVERITIES[severity]
@@ -52,7 +66,7 @@ def parseSyslog(line, tzinfo):
     Parse syslog log message.
 
     This parses a syslog message per RFC 3164 into a dictionary with keys
-    {u'message'}, C{'timestamp'}, C{'facility'}, C{'severity'}, C{'hostname'},
+    C{'message'}, C{'timestamp'}, C{'facility'}, C{'severity'}, C{'hostname'},
     C{'tag'} and C{'pid'}. If the log line doesn't match the syntax defined in
     RFC 3164 it returns the entire line as the value of the C{'message'} key.
 
@@ -65,9 +79,8 @@ def parseSyslog(line, tzinfo):
 
     If the timestamp cannot be parsed, the C{'timestamp'} key will be absent
     from the resulting dictionary. If there is no PID in square brackets
-    directly following the tag, the C{'pid'} key will be absent. If the
-    priority exceed 191, the C{'facility'} and C{'severity'} fields will be
-    empty.
+    directly following the tag, the C{'pid'} key will be absent. For invalid
+    priority values, the C{'facility'} and C{'severity'} fields will be empty.
 
     @param line: Syslog log message.
     @type line: C{unicode}
@@ -80,16 +93,18 @@ def parseSyslog(line, tzinfo):
         timezone-aware L{datetime.datetime} as value. All other values are
         L{unicode} strings.
 
-    @rtype: L{dict}.
+    @rtype: L{dict}
     """
     eventDict = {}
 
     match = RE_SYSLOG.match(line)
     if match:
-        facility, severity = parsePriority(int(match.group('priority')))
-        if facility:
+        try:
+            facility, severity = parsePriority(int(match.group('priority')))
+        except IndexError:
+            pass
+        else:
             eventDict['facility'] = facility
-        if severity:
             eventDict['severity'] = severity
 
         try:
