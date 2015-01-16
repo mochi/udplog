@@ -15,7 +15,7 @@ from twisted.python import usage
 from udplog.twisted import Dispatcher, UDPLogProtocol
 from udplog.twisted import UDPLogClientFactory
 from udplog.twisted import UDPLogToTwistedLog
-from udplog import udplog
+from udplog import syslog, udplog
 
 class Options(usage.Options):
     optParameters = [
@@ -31,8 +31,12 @@ class Options(usage.Options):
         ('rabbitmq-exchange', None, 'logs', 'RabbitMQ exchange'),
         ('rabbitmq-queue-size', None, 2500,
              'Maximum number of log events to buffer for RabbitMQ', int),
+
         ('redis-port', None, 6379, 'Redis port', int),
         ('redis-key', None, None, 'Redis list key'),
+
+        ('syslog-interface', None, '', 'syslog interface'),
+        ('syslog-port', None, None, 'syslog port', int),
         ]
 
     optFlags = [
@@ -56,8 +60,11 @@ def makeService(config):
 
     s = service.MultiService()
 
-    # Set up UDP server as the dispatcher.
+    # Set up event dispatcher
+
     dispatcher = Dispatcher()
+
+    # Set up UDPLog server.
     udplogProtocol = UDPLogProtocol(dispatcher.eventReceived)
 
     udplogServer = internet.UDPServer(port=config['udplog-port'],
@@ -65,6 +72,17 @@ def makeService(config):
                                       interface=config['udplog-interface'],
                                       maxPacketSize=65536)
     udplogServer.setServiceParent(s)
+
+    # Set up syslog server
+    if config['syslog-port'] is not None:
+        syslogProtocol = syslog.SyslogDatagramProtocol(dispatcher.eventReceived)
+
+        syslogServer = internet.UDPServer(port=config['syslog-port'],
+                                          protocol=syslogProtocol,
+                                          interface=config['syslog-interface'],
+                                          maxPacketSize=65536)
+        syslogServer.setServiceParent(s)
+
 
     # Set up Thrift/Scribe client.
     if config['scribe-host']:

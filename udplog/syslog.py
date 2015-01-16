@@ -12,10 +12,13 @@ further shipping similar to the native udplog protocol.
 
 from __future__ import division, absolute_import
 
+import calendar
 import re
 
 from dateutil.parser import parse
+from dateutil import tz
 
+from twisted.internet.protocol import DatagramProtocol
 from twisted.python import log
 
 FACILITIES = [
@@ -28,6 +31,18 @@ FACILITIES = [
 SEVERITIES = [
     u'emerg', u'alert', u'crit', u'err', u'warn', u'notice', u'info', u'debug'
     ]
+
+LOG_LEVELS = {
+    u'emerg': u'EMERGENCY',
+    u'alert': u'ALERT',
+    u'crit': u'CRITICAL',
+    u'err': u'ERROR',
+    u'warn': u'WARNING',
+    u'notice': u'NOTICE',
+    u'info': u'INFO',
+    u'debug': u'DEBUG',
+    }
+
 
 RE_SYSLOG = re.compile(
     u"""
@@ -124,3 +139,31 @@ def parseSyslog(line, tzinfo):
         eventDict['message'] = line
 
     return eventDict
+
+
+def syslogToUDPLogEvent(eventDict):
+    if 'timestamp' in eventDict:
+        eventDict['timestamp'] = calendar.timegm(eventDict['timestamp'].utctimetuple())
+
+    if 'tag' in eventDict:
+        eventDict.setdefault('category', eventDict['tag'])
+        eventDict.setdefault('appname', eventDict['tag'])
+        del eventDict['tag']
+
+    if 'severity' in eventDict:
+        eventDict.setdefault('logLevel', LOG_LEVELS[eventDict['severity']])
+        del eventDict['severity']
+
+    return eventDict
+
+
+class SyslogDatagramProtocol(DatagramProtocol):
+
+    def __init__(self, callback):
+        self.callback = callback
+
+
+    def datagramReceived(self, datagram, addr):
+        eventDict = parseSyslog(datagram.decode('utf-8'), tz.gettz())
+        eventDict = syslogToUDPLogEvent(eventDict)
+        self.callback(eventDict)
