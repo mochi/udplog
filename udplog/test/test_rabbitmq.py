@@ -113,7 +113,7 @@ class RabbitMQPublisherTest(unittest.TestCase):
         self.publisher.producer = twisted.QueueProducer(callback=cb,
                                                        clock=clock)
         self.publisher.producer.resumeProducing()
-        self.publisher.dispatcher = twisted.DispatcherFromUDPLogProtocol()
+        self.publisher.dispatcher = twisted.Dispatcher()
         self.publisher.dispatcher.register(self.publisher.producer.put)
 
         # Patch parent class to test up-call

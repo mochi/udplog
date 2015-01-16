@@ -235,15 +235,14 @@ class TwistedLogHandlerTest(unittest.TestCase):
 
 
 
-class UDPLogProtocol(unittest.TestCase):
+class UDPLogProtocolTest(unittest.TestCase):
     """
     Tests for L{udplog.twisted.UDPLogProtocol}.
     """
 
     def setUp(self):
         self.events = []
-        self.protocol = twisted.UDPLogProtocol()
-        self.protocol.eventReceived = self.events.append
+        self.protocol = twisted.UDPLogProtocol(self.events.append)
 
 
     def test_datagramReceived(self):
@@ -288,13 +287,13 @@ class UDPLogProtocol(unittest.TestCase):
 
 
 
-class DispatcherFromUDPLogProtocolTest(unittest.TestCase):
+class Dispatcher(unittest.TestCase):
     """
-    Tests for L{udplog.twisted.DispatcherFromUDPLogProtocol}.
+    Tests for L{udplog.twisted.Dispatcher}.
     """
 
     def setUp(self):
-        self.dispatcher = twisted.DispatcherFromUDPLogProtocol()
+        self.dispatcher = twisted.Dispatcher()
 
 
     def test_register(self):

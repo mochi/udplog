@@ -12,7 +12,7 @@ from twisted.application import service
 from twisted.application import internet
 from twisted.python import usage
 
-from udplog.twisted import DispatcherFromUDPLogProtocol
+from udplog.twisted import Dispatcher, UDPLogProtocol
 from udplog.twisted import UDPLogClientFactory
 from udplog.twisted import UDPLogToTwistedLog
 from udplog import udplog
@@ -57,10 +57,11 @@ def makeService(config):
     s = service.MultiService()
 
     # Set up UDP server as the dispatcher.
-    dispatcher = DispatcherFromUDPLogProtocol()
+    dispatcher = Dispatcher()
+    udplogProtocol = UDPLogProtocol(dispatcher.eventReceived)
 
     udplogServer = internet.UDPServer(port=config['udplog-port'],
-                                      protocol=dispatcher,
+                                      protocol=udplogProtocol,
                                       interface=config['udplog-interface'],
                                       maxPacketSize=65536)
     udplogServer.setServiceParent(s)
