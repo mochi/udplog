@@ -14,7 +14,7 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from udplog import redis
-from udplog.twisted import DispatcherFromUDPLogProtocol
+from udplog.twisted import Dispatcher
 
 class FakeRedisClient(object):
 
@@ -34,7 +34,7 @@ class FakeRedisClient(object):
 class RedisPublisherServiceTest(unittest.TestCase):
 
     def setUp(self):
-        self.dispatcher = DispatcherFromUDPLogProtocol()
+        self.dispatcher = Dispatcher()
         self.client = FakeRedisClient()
         self.publisher = redis.RedisPublisher(self.dispatcher,
                                               self.client,
@@ -298,7 +298,7 @@ class MakeServiceTest(unittest.TestCase):
         config = {'redis-hosts': set(['10.0.0.2', '10.0.0.3']),
                   'redis-port': 6379,
                   'redis-key': 'udplog'}
-        dispatcher = DispatcherFromUDPLogProtocol()
+        dispatcher = Dispatcher()
         multiService = redis.makeService(config, dispatcher)
         services = list(multiService)
 

@@ -1,4 +1,4 @@
-# -*- test-case-name: udplog.test.test_scribe -*-
+# -*- test-case-name: udplog.test.test_twisted -*-
 #
 # Copyright (c) Mochi Media, Inc.
 # Copyright (c) Ralph Meijer.
@@ -183,6 +183,9 @@ class UDPLogProtocol(protocol.DatagramProtocol):
     an event, it is decoded and passed to L{eventReceived}.
     """
 
+    def __init__(self, callback):
+        self.callback = callback
+
     def datagramReceived(self, datagram, addr):
         data = datagram.rstrip()
 
@@ -193,19 +196,10 @@ class UDPLogProtocol(protocol.DatagramProtocol):
             log.err()
             return
 
-        self.eventReceived(event)
+        self.callback(event)
 
 
-    def eventReceived(self, event):
-        """
-        A log event was received.
-
-        Override this method to process events.
-        """
-
-
-
-class DispatcherFromUDPLogProtocol(UDPLogProtocol):
+class Dispatcher(object):
     """
     Adapter from UDPLogProtocol to a consumer of log events.
     """
@@ -386,7 +380,7 @@ class UDPLogClientFactory(protocol.ReconnectingClientFactory):
 
 class UDPLogToTwistedLog(object):
     """
-    Consumer for L{DispatcherFromUDPLogProtocol} that logs to Twisted log.
+    Consumer for L{Dispatcher} that logs to Twisted log.
     """
 
     def __init__(self, dispatcher):
