@@ -207,3 +207,120 @@ class ParseSyslogTests(TestCase):
         result = syslog.parseSyslog(line, self.tz)
         self.assertEquals('', result['message'])
         self.assertEquals('started', result['event'])
+
+
+
+class SyslogToUDPLogEventTests(TestCase):
+    """
+    Tests for L{syslog.syslogToUDPLogEvent}.
+    """
+
+    def test_timestamp(self):
+        """
+        The event timestamp is converted to a POSIX timestamp.
+        """
+        eventDict = {
+                'timestamp': datetime.datetime(2015, 1, 15, 15, 59, 26,
+                                               tzinfo=tz.tzutc())
+                }
+        eventDict = syslog.syslogToUDPLogEvent(eventDict)
+        self.assertEquals(1421337566, eventDict['timestamp'])
+
+
+    def test_categoryDefault(self):
+        """
+        If the category is not set, it is set to C{'syslog'}.
+        """
+        eventDict = {}
+        eventDict = syslog.syslogToUDPLogEvent(eventDict)
+        self.assertEquals('syslog', eventDict['category'])
+
+
+    def test_categoryAlreadySet(self):
+        """
+        If the category is set, it is left unchanged.
+        """
+        eventDict = {'category': 'test'}
+        eventDict = syslog.syslogToUDPLogEvent(eventDict)
+        self.assertEquals('test', eventDict['category'])
+
+
+    def test_tag(self):
+        """
+        If the syslog event has a tag, it is renamed to appname.
+        """
+        eventDict = {'tag': 'test'}
+        eventDict = syslog.syslogToUDPLogEvent(eventDict)
+        self.assertEquals('test', eventDict['appname'])
+        self.assertNotIn('tag', eventDict)
+
+
+    def test_severity(self):
+        """
+        If the syslog event has a severity, it is renamed, mapped to logLevel.
+        """
+        eventDict = {'severity': 'debug'}
+        eventDict = syslog.syslogToUDPLogEvent(eventDict)
+        self.assertEquals('DEBUG', eventDict['logLevel'])
+        self.assertNotIn('severity', eventDict)
+
+
+    def test_severityEmerg(self):
+        """
+        The syslog severity 'emerg' is mapped to 'EMERGENCY'.
+        """
+        eventDict = {'severity': 'emerg'}
+        eventDict = syslog.syslogToUDPLogEvent(eventDict)
+        self.assertEquals('EMERGENCY', eventDict['logLevel'])
+
+
+    def test_severityCrit(self):
+        """
+        The syslog severity 'crit' is mapped to 'CRITICAL'.
+        """
+        eventDict = {'severity': 'crit'}
+        eventDict = syslog.syslogToUDPLogEvent(eventDict)
+        self.assertEquals('CRITICAL', eventDict['logLevel'])
+
+
+    def test_severityErr(self):
+        """
+        The syslog severity 'err' is mapped to 'ERROR'.
+        """
+        eventDict = {'severity': 'err'}
+        eventDict = syslog.syslogToUDPLogEvent(eventDict)
+        self.assertEquals('ERROR', eventDict['logLevel'])
+        self.assertNotIn('severity', eventDict)
+
+
+    def test_severityWarn(self):
+        """
+        The syslog severity 'warn' is mapped to 'WARNING'.
+        """
+        eventDict = {'severity': 'warn'}
+        eventDict = syslog.syslogToUDPLogEvent(eventDict)
+        self.assertEquals('WARNING', eventDict['logLevel'])
+        self.assertNotIn('severity', eventDict)
+
+
+class SyslogDatagramProtocolTests(TestCase):
+    """
+    Tests for L{syslog.SyslogDatagramProtocol}.
+    """
+
+    def test_basic(self):
+        out = []
+        protocol = syslog.SyslogDatagramProtocol(out.append)
+        datagram = b'<13>Jan 15 16:59:26 myhost test: hello'
+        protocol.datagramReceived(datagram, None)
+
+        self.assertEqual(1, len(out))
+
+        eventDict = out[-1]
+        self.assertEquals(u'syslog', eventDict['category'])
+        self.assertEquals(u'NOTICE', eventDict['logLevel'])
+        self.assertEquals(1421337566, eventDict['timestamp'])
+        self.assertEquals(u'myhost', eventDict['hostname'])
+        self.assertEquals(u'hello', eventDict['message'])
+
+

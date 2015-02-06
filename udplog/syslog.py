@@ -160,13 +160,14 @@ def syslogToUDPLogEvent(eventDict):
     if 'timestamp' in eventDict:
         eventDict['timestamp'] = calendar.timegm(eventDict['timestamp'].utctimetuple())
 
+    eventDict.setdefault('category', u'syslog')
+
     if 'tag' in eventDict:
-        eventDict.setdefault('category', eventDict['tag'])
-        eventDict.setdefault('appname', eventDict['tag'])
+        eventDict['appname'] = eventDict['tag']
         del eventDict['tag']
 
     if 'severity' in eventDict:
-        eventDict.setdefault('logLevel', LOG_LEVELS[eventDict['severity']])
+        eventDict['logLevel'] = LOG_LEVELS[eventDict['severity']]
         del eventDict['severity']
 
     return eventDict
