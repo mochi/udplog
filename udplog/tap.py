@@ -8,6 +8,8 @@ Twisted Application set up for UDPLog.
 
 from __future__ import division, absolute_import
 
+import socket
+
 from twisted.application import service
 from twisted.application import internet
 from twisted.python import usage
@@ -77,8 +79,11 @@ def makeService(config):
     # Set up syslog server
     if (config.get('syslog-port') is not None or
         config.get('syslog-unix-socket') is not None):
+        hostname = socket.gethostname()
+        hostnames = {hostname.split('.')[0],
+                     hostname}
         syslogProtocol = syslog.SyslogDatagramProtocol(
-            dispatcher.eventReceived)
+            dispatcher.eventReceived, hostnames=hostnames)
 
         if config.get('syslog-unix-socket') is not None:
             syslogServer = internet.UNIXDatagramServer(

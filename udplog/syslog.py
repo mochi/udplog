@@ -160,7 +160,7 @@ def parseSyslog(line, tzinfo):
 
 
 
-def syslogToUDPLogEvent(eventDict):
+def syslogToUDPLogEvent(eventDict, hostnames=None):
     """
     Convert syslog event to a UDPLog event.
 
@@ -170,6 +170,12 @@ def syslogToUDPLogEvent(eventDict):
 
     Additionally, this sets the C{category} field to C{'syslog'} if not set
     through the use of CEE.
+
+    @param eventDict: The event dictionary.
+    @type eventDict: C{dict}
+
+    @param hostnames: Map to rewrite hostnames.
+    @type hostnames: L{dict}
     """
     if 'timestamp' in eventDict:
         eventDict['timestamp'] = calendar.timegm(
@@ -185,6 +191,9 @@ def syslogToUDPLogEvent(eventDict):
         eventDict['logLevel'] = LOG_LEVELS[eventDict['severity']]
         del eventDict['severity']
 
+    if (hostnames and eventDict.get('hostname') in hostnames):
+        eventDict['hostname'] = hostnames[eventDict['hostname']]
+
     return eventDict
 
 
@@ -199,16 +208,17 @@ class SyslogDatagramProtocol(DatagramProtocol):
     over UNIX sockets or UDP respectively. See L{udplog.tap} for examples.
     """
 
-    def __init__(self, callback):
+    def __init__(self, callback, hostnames=None):
         """
         @param callback: Callback function that is called with a parsed
             syslog event, with fields made consistent for UDPLog. See
             L{parseSyslog} and L{syslogToUDPLogEvent} for details.
         """
         self._callback = callback
+        self._hostnames = hostnames
 
 
     def datagramReceived(self, datagram, addr):
         eventDict = parseSyslog(datagram.decode('utf-8'), tz.gettz())
-        eventDict = syslogToUDPLogEvent(eventDict)
+        eventDict = syslogToUDPLogEvent(eventDict, self._hostnames)
         self._callback(eventDict)

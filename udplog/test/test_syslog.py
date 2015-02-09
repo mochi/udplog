@@ -303,6 +303,28 @@ class SyslogToUDPLogEventTests(TestCase):
         self.assertNotIn('severity', eventDict)
 
 
+    def test_hostnames(self):
+        """
+        A matching hostname in the hostname mapping overrides.
+        """
+        eventDict = {'hostname': 'test'}
+        eventDict = syslog.syslogToUDPLogEvent(
+            eventDict,
+            hostnames={'test': 'test.example.org'})
+        self.assertEquals('test.example.org', eventDict['hostname'])
+
+
+    def test_defaultHostnameNoMatch(self):
+        """
+        A non-matching hostname in the hostname mapping remains unchanged.
+        """
+        eventDict = {'hostname': 'foo'}
+        eventDict = syslog.syslogToUDPLogEvent(
+            eventDict,
+            hostnames={'test': 'test.example.org'})
+        self.assertEquals('foo', eventDict['hostname'])
+
+
 
 class SyslogDatagramProtocolTests(TestCase):
     """
@@ -323,3 +345,20 @@ class SyslogDatagramProtocolTests(TestCase):
         self.assertGreater(eventDict['timestamp'], 0)
         self.assertEquals(u'myhost', eventDict['hostname'])
         self.assertEquals(u'hello', eventDict['message'])
+
+
+    def test_hostname(self):
+        """
+        Hostnames are mapped.
+        """
+        out = []
+        protocol = syslog.SyslogDatagramProtocol(
+            out.append,
+            hostnames={'myhost': 'myhost.example.org'})
+        datagram = b'<13>Jan 15 16:59:26 myhost test: hello'
+        protocol.datagramReceived(datagram, None)
+
+        self.assertEqual(1, len(out))
+
+        eventDict = out[-1]
+        self.assertEquals(u'myhost.example.org', eventDict['hostname'])

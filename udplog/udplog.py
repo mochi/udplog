@@ -114,8 +114,8 @@ class UDPLogger(object):
         failures, for unserializable objects it falls back to the L{repr} of
         such objects.
 
-        @type category: C{str}.
-        @type eventDict: L{dict}.
+        @type category: L{str}
+        @type eventDict: L{dict}
         """
         msg = simplejson.dumps(eventDict,
                                default=lambda x: str(repr(x)),
