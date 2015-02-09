@@ -126,7 +126,7 @@ class ParseSyslogTests(TestCase):
         self.assertEquals(timestamp, result['timestamp'])
 
 
-    def test_timestampSingleDigitDaySpace(self):
+    def test_timestampSingleDigitDayZero(self):
         """
         Single digit days with leading zero are parsed correctly.
         """
