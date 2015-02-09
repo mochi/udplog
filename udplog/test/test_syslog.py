@@ -108,9 +108,29 @@ class ParseSyslogTests(TestCase):
 
     def test_timestampSingleDigitDay(self):
         """
-        Single digit days are parsed correctly.
+        Single digit days without leading space are parsed correctly.
+        """
+        line = "<13>Jan 5 16:59:26 myhost test: hello"
+        result = syslog.parseSyslog(line, self.tz)
+        timestamp = datetime.datetime(2015, 1, 5, 15, 59, 26, tzinfo=tz.tzutc())
+        self.assertEquals(timestamp, result['timestamp'])
+
+
+    def test_timestampSingleDigitDaySpace(self):
+        """
+        Single digit days with leading space are parsed correctly.
         """
         line = "<13>Jan  5 16:59:26 myhost test: hello"
+        result = syslog.parseSyslog(line, self.tz)
+        timestamp = datetime.datetime(2015, 1, 5, 15, 59, 26, tzinfo=tz.tzutc())
+        self.assertEquals(timestamp, result['timestamp'])
+
+
+    def test_timestampSingleDigitDaySpace(self):
+        """
+        Single digit days with leading zero are parsed correctly.
+        """
+        line = "<13>Jan 05 16:59:26 myhost test: hello"
         result = syslog.parseSyslog(line, self.tz)
         timestamp = datetime.datetime(2015, 1, 5, 15, 59, 26, tzinfo=tz.tzutc())
         self.assertEquals(timestamp, result['timestamp'])
@@ -133,6 +153,15 @@ class ParseSyslogTests(TestCase):
         line = "<13>Jan 15 16:59:26 myhost test: hello"
         result = syslog.parseSyslog(line, self.tz)
         self.assertEquals('myhost', result['hostname'])
+
+
+    def test_hostnameMissing(self):
+        """
+        The message is extracted from the log line.
+        """
+        line = "<13>Jan 15 16:59:26 test: hello"
+        result = syslog.parseSyslog(line, self.tz)
+        self.assertIdentical(None, result['hostname'])
 
 
     def test_tag(self):
