@@ -75,21 +75,23 @@ def makeService(config):
     udplogServer.setServiceParent(s)
 
     # Set up syslog server
-    if (config['syslog-port'] is not None or
-        config['syslog-unix-socket'] is not None):
-        syslogProtocol = syslog.SyslogDatagramProtocol(dispatcher.eventReceived)
+    if (config.get('syslog-port') is not None or
+        config.get('syslog-unix-socket') is not None):
+        syslogProtocol = syslog.SyslogDatagramProtocol(
+            dispatcher.eventReceived)
 
-        if config['syslog-unix-socket'] is not None:
+        if config.get('syslog-unix-socket') is not None:
             syslogServer = internet.UNIXDatagramServer(
                 address=config['syslog-unix-socket'],
                 protocol=syslogProtocol,
                 maxPacketSize=65536)
             syslogServer.setServiceParent(s)
-        if config['syslog-port'] is not None:
-            syslogServer = internet.UDPServer(port=config['syslog-port'],
-                                              protocol=syslogProtocol,
-                                              interface=config['syslog-interface'],
-                                              maxPacketSize=65536)
+        if config.get('syslog-port') is not None:
+            syslogServer = internet.UDPServer(
+                port=config['syslog-port'],
+                protocol=syslogProtocol,
+                interface=config.get('syslog-interface', ''),
+                maxPacketSize=65536)
             syslogServer.setServiceParent(s)
 
 
