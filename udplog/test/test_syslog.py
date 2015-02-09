@@ -155,13 +155,13 @@ class ParseSyslogTests(TestCase):
         self.assertEquals('myhost', result['hostname'])
 
 
-    def test_hostnameMissing(self):
+    def test_hostnameEmpty(self):
         """
         The message is extracted from the log line.
         """
-        line = "<13>Jan 15 16:59:26 test: hello"
+        line = "<13>Jan 15 16:59:26  test: hello"
         result = syslog.parseSyslog(line, self.tz)
-        self.assertIdentical(None, result['hostname'])
+        self.assertEqual('', result['hostname'])
 
 
     def test_tag(self):

@@ -50,7 +50,7 @@ RE_SYSLOG = re.compile(
     ^
     <(?P<priority>\d+)>
     (?P<timestamp>\w\w\w[ ][ \d]?\d[ ]\d\d:\d\d:\d\d)[ ]
-    ((?P<hostname>\w+)[ ])?
+    (?P<hostname>\w*)[ ]
     (?P<tag>\w+)(\[(?P<pid>\d+)\])?:[ ]?
     (?P<content>(?P<message>.*?)
     ([ ]?@cee:[ ](?P<cee>.*))?)

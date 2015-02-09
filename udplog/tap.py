@@ -82,7 +82,7 @@ def makeService(config):
         hostname = socket.gethostname()
         hostnames = {
             hostname.split('.')[0]: hostname,
-            None: hostname
+            '': hostname
         }
         syslogProtocol = syslog.SyslogDatagramProtocol(
             dispatcher.eventReceived, hostnames=hostnames)
