@@ -80,8 +80,7 @@ def makeService(config):
     if (config.get('syslog-port') is not None or
         config.get('syslog-unix-socket') is not None):
         hostname = socket.gethostname()
-        hostnames = {hostname.split('.')[0],
-                     hostname}
+        hostnames = {hostname.split('.')[0]: hostname}
         syslogProtocol = syslog.SyslogDatagramProtocol(
             dispatcher.eventReceived, hostnames=hostnames)
 
