@@ -303,6 +303,7 @@ class SyslogToUDPLogEventTests(TestCase):
         self.assertNotIn('severity', eventDict)
 
 
+
 class SyslogDatagramProtocolTests(TestCase):
     """
     Tests for L{syslog.SyslogDatagramProtocol}.
@@ -322,5 +323,3 @@ class SyslogDatagramProtocolTests(TestCase):
         self.assertGreater(eventDict['timestamp'], 0)
         self.assertEquals(u'myhost', eventDict['hostname'])
         self.assertEquals(u'hello', eventDict['message'])
-
-

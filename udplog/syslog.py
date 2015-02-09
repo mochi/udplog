@@ -52,7 +52,8 @@ RE_SYSLOG = re.compile(
     (?P<timestamp>\w\w\w[ ][ 123456789]\d[ ]\d\d:\d\d:\d\d)[ ]
     (?P<hostname>\w+)[ ]
     (?P<tag>\w+)(\[(?P<pid>\d+)\])?:[ ]?
-    (?P<content>(?P<message>.*?)([ ]?@cee:[ ](?P<cee>.*))?)
+    (?P<content>(?P<message>.*?)
+    ([ ]?@cee:[ ](?P<cee>.*))?)
     $
     """,
     re.IGNORECASE | re.VERBOSE)
@@ -101,7 +102,9 @@ def parseSyslog(line, tzinfo):
     If the message has the C{'@cee:'} marker, the rest of the message
     is interpreted as a JSON object and merged into the resulting event
     dictionary. See U{Mitre CEE<https://cee.mitre.org/>}. Note that no
-    attempt is made to interpret the field names.
+    attempt is made to interpret the field names. It is advisable to explicitly
+    set the C{category} field to provide a namespace for the other fields, as
+    this helps type mapping to storage facilities like Elasticsearch.
 
     @param line: Syslog log message.
     @type line: C{unicode}
@@ -156,9 +159,21 @@ def parseSyslog(line, tzinfo):
     return eventDict
 
 
+
 def syslogToUDPLogEvent(eventDict):
+    """
+    Convert syslog event to a UDPLog event.
+
+    This converts the timestamp to POSIX style and renames the C{tag}
+    and C{severity} fields into respectively C{appname} and C{logLevel} for
+    consistency in field naming.
+
+    Additionally, this sets the C{category} field to C{'syslog'} if not set
+    through the use of CEE.
+    """
     if 'timestamp' in eventDict:
-        eventDict['timestamp'] = calendar.timegm(eventDict['timestamp'].utctimetuple())
+        eventDict['timestamp'] = calendar.timegm(
+            eventDict['timestamp'].utctimetuple())
 
     eventDict.setdefault('category', u'syslog')
 
@@ -173,13 +188,27 @@ def syslogToUDPLogEvent(eventDict):
     return eventDict
 
 
+
 class SyslogDatagramProtocol(DatagramProtocol):
+    """
+    Datagram protocol for syslog.
+
+    This can be used with
+    C{UNIXDatagramServer<twisted.application.internet.UNIXDatagramServer} or
+    C{UDPServer<twisted.application.internet.UDPServer} to accept syslog events
+    over UNIX sockets or UDP respectively. See L{udplog.tap} for examples.
+    """
 
     def __init__(self, callback):
-        self.callback = callback
+        """
+        @param callback: Callback function that is called with a parsed
+            syslog event, with fields made consistent for UDPLog. See
+            L{parseSyslog} and L{syslogToUDPLogEvent} for details.
+        """
+        self._callback = callback
 
 
     def datagramReceived(self, datagram, addr):
         eventDict = parseSyslog(datagram.decode('utf-8'), tz.gettz())
         eventDict = syslogToUDPLogEvent(eventDict)
-        self.callback(eventDict)
+        self._callback(eventDict)
