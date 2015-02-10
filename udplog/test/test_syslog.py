@@ -24,21 +24,21 @@ class ParsePriorityTests(TestCase):
         """
         Priority of 13 means facility user, severity notice.
         """
-        self.assertEquals(('user', 'notice'), syslog.parsePriority(13))
+        self.assertEqual(('user', 'notice'), syslog.parsePriority(13))
 
 
     def test_priority29(self):
         """
         Priority of 29 means facility daemon, severity notice.
         """
-        self.assertEquals(('daemon', 'notice'), syslog.parsePriority(29))
+        self.assertEqual(('daemon', 'notice'), syslog.parsePriority(29))
 
 
     def test_priority191(self):
         """
         191 is the highest valid priority value.
         """
-        self.assertEquals(('local7', 'debug'), syslog.parsePriority(191))
+        self.assertEqual(('local7', 'debug'), syslog.parsePriority(191))
 
 
     def test_priority192(self):
@@ -64,8 +64,8 @@ class ParseSyslogTests(TestCase):
         """
         line = b"<13>Jan 15 16:59:26 myhost test: hello"
         result = syslog.parseSyslog(line, self.tz)
-        self.assertEquals('user', result['facility'])
-        self.assertEquals('notice', result['severity'])
+        self.assertEqual('user', result['facility'])
+        self.assertEqual('notice', result['severity'])
 
 
     def test_priorityInvalid(self):
@@ -84,7 +84,7 @@ class ParseSyslogTests(TestCase):
         """
         line = b"<13>Jan 15 16:59:26 myhost test: hello"
         result = syslog.parseSyslog(line, self.tz)
-        self.assertEquals(u'hello', result['message'])
+        self.assertEqual(u'hello', result['message'])
 
 
     def test_messageBOM(self):
@@ -93,7 +93,7 @@ class ParseSyslogTests(TestCase):
         """
         line = b"<13>Jan 15 16:59:26 myhost test: \xef\xbb\xbfol\xc3\xa1"
         result = syslog.parseSyslog(line, self.tz)
-        self.assertEquals(u'olá', result['message'])
+        self.assertEqual(u'olá', result['message'])
 
 
     def test_messageBOMAbsent(self):
@@ -102,7 +102,7 @@ class ParseSyslogTests(TestCase):
         """
         line = b"<13>Jan 15 16:59:26 myhost test: ol\xe1"
         result = syslog.parseSyslog(line, self.tz)
-        self.assertEquals(u'olá', result['message'])
+        self.assertEqual(u'olá', result['message'])
 
 
     def test_timestamp(self):
@@ -112,7 +112,7 @@ class ParseSyslogTests(TestCase):
         line = b"<13>Jan 15 16:59:26 myhost test: hello"
         result = syslog.parseSyslog(line, self.tz)
         timestamp = datetime.datetime(2015, 1, 15, 15, 59, 26, tzinfo=tz.tzutc())
-        self.assertEquals(timestamp, result['timestamp'])
+        self.assertEqual(timestamp, result['timestamp'])
 
 
     def test_timestampOtherZone(self):
@@ -122,7 +122,7 @@ class ParseSyslogTests(TestCase):
         line = b"<13>Jan 15 16:59:26 myhost test: hello"
         result = syslog.parseSyslog(line, tz.gettz('America/Los Angeles'))
         timestamp = datetime.datetime(2015, 1, 16, 00, 59, 26, tzinfo=tz.tzutc())
-        self.assertEquals(timestamp, result['timestamp'])
+        self.assertEqual(timestamp, result['timestamp'])
 
 
     def test_timestampSingleDigitDay(self):
@@ -132,7 +132,7 @@ class ParseSyslogTests(TestCase):
         line = b"<13>Jan 5 16:59:26 myhost test: hello"
         result = syslog.parseSyslog(line, self.tz)
         timestamp = datetime.datetime(2015, 1, 5, 15, 59, 26, tzinfo=tz.tzutc())
-        self.assertEquals(timestamp, result['timestamp'])
+        self.assertEqual(timestamp, result['timestamp'])
 
 
     def test_timestampSingleDigitDaySpace(self):
@@ -142,7 +142,7 @@ class ParseSyslogTests(TestCase):
         line = b"<13>Jan  5 16:59:26 myhost test: hello"
         result = syslog.parseSyslog(line, self.tz)
         timestamp = datetime.datetime(2015, 1, 5, 15, 59, 26, tzinfo=tz.tzutc())
-        self.assertEquals(timestamp, result['timestamp'])
+        self.assertEqual(timestamp, result['timestamp'])
 
 
     def test_timestampSingleDigitDayZero(self):
@@ -152,7 +152,7 @@ class ParseSyslogTests(TestCase):
         line = b"<13>Jan 05 16:59:26 myhost test: hello"
         result = syslog.parseSyslog(line, self.tz)
         timestamp = datetime.datetime(2015, 1, 5, 15, 59, 26, tzinfo=tz.tzutc())
-        self.assertEquals(timestamp, result['timestamp'])
+        self.assertEqual(timestamp, result['timestamp'])
 
 
     def test_timestampInvalid(self):
@@ -173,7 +173,7 @@ class ParseSyslogTests(TestCase):
         result = syslog.parseSyslog(line, self.tz)
         timestamp = datetime.datetime(2015, 1, 15, 15, 59, 26, 341000,
                                       tzinfo=tz.tzutc())
-        self.assertEquals(timestamp, result['timestamp'])
+        self.assertEqual(timestamp, result['timestamp'])
 
 
     def test_hostname(self):
@@ -182,7 +182,7 @@ class ParseSyslogTests(TestCase):
         """
         line = b"<13>Jan 15 16:59:26 myhost test: hello"
         result = syslog.parseSyslog(line, self.tz)
-        self.assertEquals('myhost', result['hostname'])
+        self.assertEqual('myhost', result['hostname'])
 
 
     def test_hostnameEmpty(self):
@@ -200,7 +200,7 @@ class ParseSyslogTests(TestCase):
         """
         line = b"<13>Jan 15 16:59:26 myhost test: hello"
         result = syslog.parseSyslog(line, self.tz)
-        self.assertEquals('test', result['tag'])
+        self.assertEqual('test', result['tag'])
 
 
     def test_tagFollowedByPID(self):
@@ -210,7 +210,7 @@ class ParseSyslogTests(TestCase):
         line = ("<29>Jan 16 15:08:58 myhost wpa_supplicant[1432]: "
                 "wlan0: CTRL-EVENT-SCAN-STARTED ")
         result = syslog.parseSyslog(line, self.tz)
-        self.assertEquals('wpa_supplicant', result['tag'])
+        self.assertEqual('wpa_supplicant', result['tag'])
 
 
     def test_pid(self):
@@ -220,8 +220,8 @@ class ParseSyslogTests(TestCase):
         line = ("<29>Jan 16 15:08:58 myhost wpa_supplicant[1432]: "
                 "wlan0: CTRL-EVENT-SCAN-STARTED ")
         result = syslog.parseSyslog(line, self.tz)
-        self.assertEquals('1432', result['pid'])
-        self.assertEquals('wlan0: CTRL-EVENT-SCAN-STARTED ',
+        self.assertEqual('1432', result['pid'])
+        self.assertEqual('wlan0: CTRL-EVENT-SCAN-STARTED ',
                           result['message'])
 
 
@@ -231,7 +231,7 @@ class ParseSyslogTests(TestCase):
         """
         line = b"something"
         result = syslog.parseSyslog(line, self.tz)
-        self.assertEquals(u'something', result['message'])
+        self.assertEqual(u'something', result['message'])
 
 
     def test_cee(self):
@@ -241,8 +241,8 @@ class ParseSyslogTests(TestCase):
         line = (b'<13>Jan 16 21:00:00 waar ralphm: '
                 b'blah @cee: {"event": "started"}')
         result = syslog.parseSyslog(line, self.tz)
-        self.assertEquals(u'blah', result['message'])
-        self.assertEquals('started', result['event'])
+        self.assertEqual(u'blah', result['message'])
+        self.assertEqual('started', result['event'])
 
 
     def test_ceeInvalid(self):
@@ -252,7 +252,7 @@ class ParseSyslogTests(TestCase):
         line = (b'<13>Jan 16 21:00:00 waar ralphm: '
                 b'blah @cee: {"event": "started}')
         result = syslog.parseSyslog(line, self.tz)
-        self.assertEquals(u'blah @cee: {"event": "started}', result['message'])
+        self.assertEqual(u'blah @cee: {"event": "started}', result['message'])
         self.assertNotIn('event', result)
         self.assertEqual(1, len(self.flushLoggedErrors(ValueError)))
 
@@ -264,8 +264,8 @@ class ParseSyslogTests(TestCase):
         line = (b'<13>Jan 16 21:00:00 waar ralphm: '
                 b'@cee: {"event": "started"}')
         result = syslog.parseSyslog(line, self.tz)
-        self.assertEquals(u'', result['message'])
-        self.assertEquals('started', result['event'])
+        self.assertEqual(u'', result['message'])
+        self.assertEqual('started', result['event'])
 
 
 
@@ -283,7 +283,7 @@ class SyslogToUDPLogEventTests(TestCase):
                                                tzinfo=tz.tzutc())
                 }
         eventDict = syslog.syslogToUDPLogEvent(eventDict)
-        self.assertEquals(1421337566, eventDict['timestamp'])
+        self.assertEqual(1421337566, eventDict['timestamp'])
 
 
     def test_categoryDefault(self):
@@ -292,7 +292,7 @@ class SyslogToUDPLogEventTests(TestCase):
         """
         eventDict = {}
         eventDict = syslog.syslogToUDPLogEvent(eventDict)
-        self.assertEquals('syslog', eventDict['category'])
+        self.assertEqual('syslog', eventDict['category'])
 
 
     def test_categoryAlreadySet(self):
@@ -301,7 +301,7 @@ class SyslogToUDPLogEventTests(TestCase):
         """
         eventDict = {'category': 'test'}
         eventDict = syslog.syslogToUDPLogEvent(eventDict)
-        self.assertEquals('test', eventDict['category'])
+        self.assertEqual('test', eventDict['category'])
 
 
     def test_tag(self):
@@ -310,7 +310,7 @@ class SyslogToUDPLogEventTests(TestCase):
         """
         eventDict = {'tag': 'test'}
         eventDict = syslog.syslogToUDPLogEvent(eventDict)
-        self.assertEquals('test', eventDict['appname'])
+        self.assertEqual('test', eventDict['appname'])
         self.assertNotIn('tag', eventDict)
 
 
@@ -320,7 +320,7 @@ class SyslogToUDPLogEventTests(TestCase):
         """
         eventDict = {'severity': 'debug'}
         eventDict = syslog.syslogToUDPLogEvent(eventDict)
-        self.assertEquals('DEBUG', eventDict['logLevel'])
+        self.assertEqual('DEBUG', eventDict['logLevel'])
         self.assertNotIn('severity', eventDict)
 
 
@@ -330,7 +330,7 @@ class SyslogToUDPLogEventTests(TestCase):
         """
         eventDict = {'severity': 'emerg'}
         eventDict = syslog.syslogToUDPLogEvent(eventDict)
-        self.assertEquals('EMERGENCY', eventDict['logLevel'])
+        self.assertEqual('EMERGENCY', eventDict['logLevel'])
 
 
     def test_severityCrit(self):
@@ -339,7 +339,7 @@ class SyslogToUDPLogEventTests(TestCase):
         """
         eventDict = {'severity': 'crit'}
         eventDict = syslog.syslogToUDPLogEvent(eventDict)
-        self.assertEquals('CRITICAL', eventDict['logLevel'])
+        self.assertEqual('CRITICAL', eventDict['logLevel'])
 
 
     def test_severityErr(self):
@@ -348,7 +348,7 @@ class SyslogToUDPLogEventTests(TestCase):
         """
         eventDict = {'severity': 'err'}
         eventDict = syslog.syslogToUDPLogEvent(eventDict)
-        self.assertEquals('ERROR', eventDict['logLevel'])
+        self.assertEqual('ERROR', eventDict['logLevel'])
         self.assertNotIn('severity', eventDict)
 
 
@@ -358,7 +358,7 @@ class SyslogToUDPLogEventTests(TestCase):
         """
         eventDict = {'severity': 'warn'}
         eventDict = syslog.syslogToUDPLogEvent(eventDict)
-        self.assertEquals('WARNING', eventDict['logLevel'])
+        self.assertEqual('WARNING', eventDict['logLevel'])
         self.assertNotIn('severity', eventDict)
 
 
@@ -370,7 +370,7 @@ class SyslogToUDPLogEventTests(TestCase):
         eventDict = syslog.syslogToUDPLogEvent(
             eventDict,
             hostnames={'test': 'test.example.org'})
-        self.assertEquals('test.example.org', eventDict['hostname'])
+        self.assertEqual('test.example.org', eventDict['hostname'])
 
 
     def test_defaultHostnameNoMatch(self):
@@ -381,7 +381,7 @@ class SyslogToUDPLogEventTests(TestCase):
         eventDict = syslog.syslogToUDPLogEvent(
             eventDict,
             hostnames={'test': 'test.example.org'})
-        self.assertEquals('foo', eventDict['hostname'])
+        self.assertEqual('foo', eventDict['hostname'])
 
 
 
@@ -399,11 +399,11 @@ class SyslogDatagramProtocolTests(TestCase):
         self.assertEqual(1, len(out))
 
         eventDict = out[-1]
-        self.assertEquals(u'syslog', eventDict['category'])
-        self.assertEquals(u'NOTICE', eventDict['logLevel'])
+        self.assertEqual(u'syslog', eventDict['category'])
+        self.assertEqual(u'NOTICE', eventDict['logLevel'])
         self.assertGreater(eventDict['timestamp'], 0)
-        self.assertEquals(u'myhost', eventDict['hostname'])
-        self.assertEquals(u'hello', eventDict['message'])
+        self.assertEqual(u'myhost', eventDict['hostname'])
+        self.assertEqual(u'hello', eventDict['message'])
 
 
     def test_hostname(self):
@@ -420,4 +420,4 @@ class SyslogDatagramProtocolTests(TestCase):
         self.assertEqual(1, len(out))
 
         eventDict = out[-1]
-        self.assertEquals(u'myhost.example.org', eventDict['hostname'])
+        self.assertEqual(u'myhost.example.org', eventDict['hostname'])
