@@ -146,6 +146,17 @@ class ParseSyslogTests(TestCase):
         self.assertEqual(1, len(self.flushLoggedErrors(ValueError)))
 
 
+    def test_timestampRFC3339(self):
+        """
+        RFC3339/ISO8601 timestamp are parsed.
+        """
+        line = "<13>2015-01-15T15:59:26.341-00 myhost test: hello"
+        result = syslog.parseSyslog(line, self.tz)
+        timestamp = datetime.datetime(2015, 1, 15, 15, 59, 26, 341000,
+                                      tzinfo=tz.tzutc())
+        self.assertEquals(timestamp, result['timestamp'])
+
+
     def test_hostname(self):
         """
         The hostname is extracted.

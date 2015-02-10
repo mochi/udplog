@@ -49,7 +49,8 @@ RE_SYSLOG = re.compile(
     u"""
     ^
     <(?P<priority>\d+)>
-    (?P<timestamp>\w\w\w[ ][ \d]?\d[ ]\d\d:\d\d:\d\d)[ ]
+    (?P<timestamp>(\w\w\w[ ][ \d]?\d[ ]\d\d:\d\d:\d\d|
+                   \d\d\d\d-\d\d-\d\dT\S+))[ ]
     (?P<hostname>\w*)[ ]
     (?P<tag>\w+)(\[(?P<pid>\d+)\])?:[ ]?
     (?P<content>(?P<message>.*?)
@@ -136,7 +137,8 @@ def parseSyslog(line, tzinfo):
         except ValueError:
             log.err()
         else:
-            dt = dt.replace(tzinfo=tzinfo)
+            if not dt.tzinfo:
+                dt = dt.replace(tzinfo=tzinfo)
             eventDict['timestamp'] = dt
 
         eventDict['hostname'] = match.group('hostname')
