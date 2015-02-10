@@ -286,6 +286,18 @@ class SyslogToUDPLogEventTests(TestCase):
         self.assertEqual(1421337566, eventDict['timestamp'])
 
 
+    def test_timestampSubSecond(self):
+        """
+        Datetimes with microseconds yield a fractional timestamp.
+        """
+        eventDict = {
+                'timestamp': datetime.datetime(2015, 1, 15, 15, 59, 26, 341000,
+                                               tzinfo=tz.tzutc())
+                }
+        eventDict = syslog.syslogToUDPLogEvent(eventDict)
+        self.assertEqual(1421337566.341, eventDict['timestamp'])
+
+
     def test_categoryDefault(self):
         """
         If the category is not set, it is set to C{'syslog'}.

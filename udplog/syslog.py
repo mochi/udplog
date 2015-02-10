@@ -12,7 +12,7 @@ further shipping similar to the native udplog protocol.
 
 from __future__ import division, absolute_import
 
-import calendar
+from datetime import datetime
 import json
 import re
 
@@ -188,8 +188,10 @@ def syslogToUDPLogEvent(eventDict, hostnames=None):
     @type hostnames: L{dict}
     """
     if 'timestamp' in eventDict:
-        eventDict['timestamp'] = calendar.timegm(
-            eventDict['timestamp'].utctimetuple())
+        posixTimestamp = (eventDict['timestamp'] -
+                          datetime(1970, 1, 1, tzinfo=tz.tzutc())
+                          ).total_seconds()
+        eventDict['timestamp'] = posixTimestamp
 
     eventDict.setdefault('category', u'syslog')
 
