@@ -53,7 +53,7 @@ RE_SYSLOG = re.compile(
                    \d\d\d\d-\d\d-\d\dT\S+))[ ]
     (?P<hostname>\w*)[ ]
     (?P<tag>\w+)(\[(?P<pid>\d+)\])?:[ ]?
-    (?P<content>(?P<message>.*?)
+    (?P<content>(?P<bom>\xef\xbb\xbf)?(?P<message>.*?)
     ([ ]?@cee:[ ](?P<cee>.*))?)
     $
     """,
@@ -108,7 +108,7 @@ def parseSyslog(line, tzinfo):
     this helps type mapping to storage facilities like Elasticsearch.
 
     @param line: Syslog log message.
-    @type line: C{unicode}
+    @type line: L{bytes}
 
     @param tzinfo: Timezone information to attach to syslog's timezone-naive
         timestamps.
@@ -145,18 +145,26 @@ def parseSyslog(line, tzinfo):
         eventDict['tag'] = match.group('tag')
         if match.group('pid'):
             eventDict['pid'] = match.group('pid')
-        eventDict['message'] = match.group('message')
+        message = match.group('message')
 
         if match.group('cee'):
             try:
                 cee = json.loads(match.group('cee'))
             except:
                 log.err()
-                eventDict['message'] = match.group('content')
+                message = match.group('content')
             else:
                 eventDict.update(cee)
+
+        if match.group('bom'):
+            message = message.decode('utf-8', 'replace')
+        else:
+            message = message.decode('latin1')
+
+        eventDict['message'] = message
     else:
-        eventDict['message'] = line
+        eventDict['message'] = line.decode('latin1')
+
 
     return eventDict
 
@@ -221,6 +229,6 @@ class SyslogDatagramProtocol(DatagramProtocol):
 
 
     def datagramReceived(self, datagram, addr):
-        eventDict = parseSyslog(datagram.decode('utf-8'), tz.gettz())
+        eventDict = parseSyslog(datagram, tz.gettz())
         eventDict = syslogToUDPLogEvent(eventDict, self._hostnames)
         self._callback(eventDict)
