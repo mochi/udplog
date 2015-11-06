@@ -45,7 +45,7 @@ class RedisPublisher(service.Service):
 
     def stopService(self):
         self.dispatcher.unregister(self.sendEvent)
-        service.Service.startService(self)
+        service.Service.stopService(self)
 
 
     def sendEvent(self, event):
