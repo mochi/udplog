@@ -13,19 +13,25 @@ import socket
 from kafka import KafkaClient, SimpleProducer
 import simplejson
 from twisted.application import service
+from twisted.internet import defer, threads
+
 
 class KafkaPublisher(service.Service):
     """
     Publisher that pushes events to a Kafka cluster.
     """
 
-    def __init__(self, dispatcher, producer, topic):
+    def __init__(self, dispatcher, config):
+        self._config = config
         self._dispatcher = dispatcher
-        self._producer = producer
-        self._topic = topic
+        self._producer = None
+        self._topic = config['kafka-topic']
 
 
+    @defer.inlineCallbacks
     def startService(self):
+        self._producer = yield threads.deferToThread(_make_producer,
+                                                     self._config)
         service.Service.startService(self)
         self._dispatcher.register(self._sendEvent)
 
@@ -42,13 +48,15 @@ class KafkaPublisher(service.Service):
 
 
 def makeService(config, dispatcher):
+    return KafkaPublisher(dispatcher, config)
+
+
+def _make_producer(config):
     client_id = 'udplog-{}'.format(socket.getfqdn())
     client = KafkaClient(config['kafka-brokers'], client_id)
-    producer = SimpleProducer(
+    return SimpleProducer(
         client,
         async=True,
         async_queue_maxsize=config['kafka-buffer-maxsize'],
         batch_send_every_n=config['kafka-send-every-msg'],
         batch_send_every_t=config['kafka-send-every-sec'])
-
-    return KafkaPublisher(dispatcher, producer, config['kafka-topic'])

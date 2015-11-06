@@ -7,6 +7,7 @@ Tests for L{udplog.kafka}.
 from __future__ import division, absolute_import
 
 import simplejson
+from twisted.internet import defer
 from twisted.trial import unittest
 
 from udplog import kafka
@@ -33,10 +34,14 @@ class KafkaPublisherServiceTest(unittest.TestCase):
     def setUp(self):
         self.dispatcher = Dispatcher()
         self.producer = FakeKafkaProducer()
-        self.publisher = kafka.KafkaPublisher(
-            self.dispatcher, self.producer, 'foo')
+        kafka._make_producer = lambda _: self.producer
+        config = {
+            'kafka-topic': 'foo'
+        }
+        self.publisher = kafka.KafkaPublisher(self.dispatcher, config)
 
 
+    @defer.inlineCallbacks
     def test_startService(self):
         """
         The publisher registers itself with the dispatcher.
@@ -45,18 +50,19 @@ class KafkaPublisherServiceTest(unittest.TestCase):
         self.dispatcher.eventReceived(event)
         self.assertEqual(0, len(self.producer.produced))
         # When
-        self.publisher.startService()
+        yield self.publisher.startService()
         # Then
         self.dispatcher.eventReceived(event)
         self.assertEqual(1, len(self.producer.produced))
 
 
+    @defer.inlineCallbacks
     def test_stopService(self):
         """
         The publisher registers itself with the dispatcher.
         """
         event = {'message': 'test'}
-        self.publisher.startService()
+        yield self.publisher.startService()
         self.dispatcher.eventReceived(event)
         # When
         self.publisher.stopService()
@@ -65,6 +71,7 @@ class KafkaPublisherServiceTest(unittest.TestCase):
         self.assertEqual(1, len(self.producer.produced))
 
 
+    @defer.inlineCallbacks
     def test_sendEvent(self):
         """
         An event is pushed as a JSON string.
@@ -72,7 +79,7 @@ class KafkaPublisherServiceTest(unittest.TestCase):
         event = {'category': u'test',
                  'message': u'test',
                  'timestamp': 1340634165}
-        self.publisher.startService()
+        yield self.publisher.startService()
         # When
         self.dispatcher.eventReceived(event)
         # Then
@@ -82,6 +89,7 @@ class KafkaPublisherServiceTest(unittest.TestCase):
         self.assertEqual(event, eventDict)
 
 
+    @defer.inlineCallbacks
     def test_sendEventUnserializable(self):
         """
         An event that cannot be serialized is dropped and an error logged.
@@ -92,7 +100,7 @@ class KafkaPublisherServiceTest(unittest.TestCase):
         event = {'category': u'test',
                  'message': Object(),
                  'timestamp': 1340634165}
-        self.publisher.startService()
+        yield self.publisher.startService()
         # When
         self.dispatcher.eventReceived(event)
         # Then
