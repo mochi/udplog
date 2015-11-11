@@ -27,19 +27,20 @@ else:
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
+
 setup(
-    name = "udplog",
-    version = "0.1.1",
-    author = "Mochi Media",
-    author_email = "dev@mochimedia.com",
-    maintainer = "Ralph Meijer",
-    maintainer_email = "ralphm@ik.nu",
-    description = ("UDPLog is a system for emitting application log events"
-                   " via UDP and shipping them via RabbitMQ or Scribe for "
-                   "further processing."),
-    license = "MIT",
-    keywords = "logging twisted udp scribe",
-    url = "https://github.com/mochi/udplog",
+    name="udplog",
+    version="0.2.0",
+    author="Mochi Media",
+    author_email="dev@mochimedia.com",
+    maintainer="Ralph Meijer",
+    maintainer_email="ralphm@ik.nu",
+    description=("UDPLog is a system for emitting application log events"
+                 " via UDP and shipping them via RabbitMQ or Scribe for "
+                 "further processing."),
+    license="MIT",
+    keywords="logging twisted udp scribe",
+    url="https://github.com/mochi/udplog",
     packages=[
         'udplog',
         'udplog.test',
@@ -64,5 +65,6 @@ setup(
         'thrift',
         'scribe',
         'python-dateutil',
+        'kafka-python'
     ],
 )
