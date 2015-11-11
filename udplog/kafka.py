@@ -1,6 +1,3 @@
-# Copyright (c) Ralph Meijer.
-# See LICENSE for details.
-
 """
 Kafka support.
 
