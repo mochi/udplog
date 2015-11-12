@@ -39,7 +39,7 @@ setup(
                  " via UDP and shipping them via RabbitMQ or Scribe for "
                  "further processing."),
     license="MIT",
-    keywords="logging twisted udp scribe",
+    keywords="logging twisted udp scribe rabbitmq redis kafka",
     url="https://github.com/mochi/udplog",
     packages=[
         'udplog',
@@ -53,7 +53,7 @@ setup(
     zip_safe=False,
     long_description=read('README.rst'),
     classifiers=[
-        "Development Status :: 4 - Beta",
+        "Development Status :: 6 - Production/Stable",
         "Topic :: Utilities",
         "License :: OSI Approved :: MIT License",
     ],

@@ -1,3 +1,6 @@
+# Copyright (c) Rackspace US, Inc.
+# See LICENSE for details.
+
 """
 Kafka support.
 
