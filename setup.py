@@ -1,6 +1,35 @@
 import os
 from setuptools import setup
 
+EXTRAS = {
+    'rabbitmq': [
+        'txAMQP'
+    ],
+    'redis': [
+        'txredis',
+    ],
+    'scribe': [
+        'thrift',
+        'scribe',
+    ],
+    'kafka': [
+        'kafka-python',
+    ],
+    'dev': [
+        'coverage',
+        'pyflakes',
+        'Sphinx',
+    ]
+}
+
+EXTRAS['all'] = (
+    EXTRAS['rabbitmq'] +
+    EXTRAS['redis'] +
+    EXTRAS['scribe'] +
+    EXTRAS['kafka']
+)
+
+
 # Make sure 'twisted' doesn't appear in top_level.txt
 
 try:
@@ -60,11 +89,7 @@ setup(
     install_requires=[
         'simplejson',
         'Twisted >= 13.0.0',
-        'txAMQP',
-        'txredis',
-        'thrift',
-        'scribe',
         'python-dateutil',
-        'kafka-python'
     ],
+    extras_require=EXTRAS,
 )

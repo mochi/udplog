@@ -2,5 +2,10 @@ include README.rst
 include NEWS
 include LICENSE
 include AUTHORS
+include .travis.yml
 include udplog/amqp0-9-1.extended.xml
-include doc/examples/*.py
+include doc/Makefile
+include doc/conf.py
+include doc/udplog.cfg
+recursive-include doc *.rst
+recursive-include doc/examples *.py
