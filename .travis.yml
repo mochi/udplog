@@ -11,9 +11,8 @@ env:
   - TWISTED=Twisted==12.1.0
 
 install:
-  - pip install pyflakes --use-mirrors
   - pip install $TWISTED --use-mirrors
-  - pip install -e .
+  - pip install -e .[all,dev]
 
 script:
   - pyflakes udplog twisted
