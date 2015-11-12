@@ -1,6 +1,35 @@
 import os
 from setuptools import setup
 
+EXTRAS = {
+    'rabbitmq': [
+        'txAMQP'
+    ],
+    'redis': [
+        'txredis',
+    ],
+    'scribe': [
+        'thrift',
+        'scribe',
+    ],
+    'kafka': [
+        'kafka-python',
+    ],
+    'dev': [
+        'coverage',
+        'pyflakes',
+        'Sphinx',
+    ]
+}
+
+EXTRAS['all'] = (
+    EXTRAS['rabbitmq'] +
+    EXTRAS['redis'] +
+    EXTRAS['scribe'] +
+    EXTRAS['kafka']
+)
+
+
 # Make sure 'twisted' doesn't appear in top_level.txt
 
 try:
@@ -39,7 +68,7 @@ setup(
                  " via UDP and shipping them via RabbitMQ or Scribe for "
                  "further processing."),
     license="MIT",
-    keywords="logging twisted udp scribe",
+    keywords="logging twisted udp scribe rabbitmq redis kafka",
     url="https://github.com/mochi/udplog",
     packages=[
         'udplog',
@@ -53,18 +82,14 @@ setup(
     zip_safe=False,
     long_description=read('README.rst'),
     classifiers=[
-        "Development Status :: 4 - Beta",
+        "Development Status :: 6 - Production/Stable",
         "Topic :: Utilities",
         "License :: OSI Approved :: MIT License",
     ],
     install_requires=[
         'simplejson',
         'Twisted >= 13.0.0',
-        'txAMQP',
-        'txredis',
-        'thrift',
-        'scribe',
         'python-dateutil',
-        'kafka-python'
     ],
+    extras_require=EXTRAS,
 )
