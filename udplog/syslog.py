@@ -12,7 +12,7 @@ further shipping similar to the native udplog protocol.
 
 from __future__ import division, absolute_import
 
-import calendar
+from datetime import datetime
 import json
 import re
 
@@ -49,10 +49,12 @@ RE_SYSLOG = re.compile(
     u"""
     ^
     <(?P<priority>\d+)>
-    (?P<timestamp>\w\w\w[ ][ 123456789]\d[ ]\d\d:\d\d:\d\d)[ ]
-    (?P<hostname>\w+)[ ]
+    (?P<timestamp>(\w\w\w[ ][ \d]?\d[ ]\d\d:\d\d:\d\d|
+                   \d\d\d\d-\d\d-\d\dT\S+))[ ]
+    (?P<hostname>\w*)[ ]
     (?P<tag>\w+)(\[(?P<pid>\d+)\])?:[ ]?
-    (?P<content>(?P<message>.*?)([ ]?@cee:[ ](?P<cee>.*))?)
+    (?P<content>(?P<bom>\xef\xbb\xbf)?(?P<message>.*?)
+    ([ ]?@cee:[ ](?P<cee>.*))?)
     $
     """,
     re.IGNORECASE | re.VERBOSE)
@@ -101,10 +103,12 @@ def parseSyslog(line, tzinfo):
     If the message has the C{'@cee:'} marker, the rest of the message
     is interpreted as a JSON object and merged into the resulting event
     dictionary. See U{Mitre CEE<https://cee.mitre.org/>}. Note that no
-    attempt is made to interpret the field names.
+    attempt is made to interpret the field names. It is advisable to explicitly
+    set the C{category} field to provide a namespace for the other fields, as
+    this helps type mapping to storage facilities like Elasticsearch.
 
     @param line: Syslog log message.
-    @type line: C{unicode}
+    @type line: L{bytes}
 
     @param tzinfo: Timezone information to attach to syslog's timezone-naive
         timestamps.
@@ -133,52 +137,100 @@ def parseSyslog(line, tzinfo):
         except ValueError:
             log.err()
         else:
-            dt = dt.replace(tzinfo=tzinfo)
+            if not dt.tzinfo:
+                dt = dt.replace(tzinfo=tzinfo)
             eventDict['timestamp'] = dt
 
         eventDict['hostname'] = match.group('hostname')
         eventDict['tag'] = match.group('tag')
         if match.group('pid'):
             eventDict['pid'] = match.group('pid')
-        eventDict['message'] = match.group('message')
+        message = match.group('message')
 
         if match.group('cee'):
             try:
                 cee = json.loads(match.group('cee'))
             except:
                 log.err()
-                eventDict['message'] = match.group('content')
+                message = match.group('content')
             else:
                 eventDict.update(cee)
+
+        if match.group('bom'):
+            message = message.decode('utf-8', 'replace')
+        else:
+            message = message.decode('latin1')
+
+        eventDict['message'] = message
     else:
-        eventDict['message'] = line
+        eventDict['message'] = line.decode('latin1')
+
 
     return eventDict
 
 
-def syslogToUDPLogEvent(eventDict):
+
+def syslogToUDPLogEvent(eventDict, hostnames=None):
+    """
+    Convert syslog event to a UDPLog event.
+
+    This converts the timestamp to POSIX style and renames the C{tag}
+    and C{severity} fields into respectively C{appname} and C{logLevel} for
+    consistency in field naming.
+
+    Additionally, this sets the C{category} field to C{'syslog'} if not set
+    through the use of CEE.
+
+    @param eventDict: The event dictionary.
+    @type eventDict: C{dict}
+
+    @param hostnames: Map to rewrite hostnames.
+    @type hostnames: L{dict}
+    """
     if 'timestamp' in eventDict:
-        eventDict['timestamp'] = calendar.timegm(eventDict['timestamp'].utctimetuple())
+        posixTimestamp = (eventDict['timestamp'] -
+                          datetime(1970, 1, 1, tzinfo=tz.tzutc())
+                          ).total_seconds()
+        eventDict['timestamp'] = posixTimestamp
+
+    eventDict.setdefault('category', u'syslog')
 
     if 'tag' in eventDict:
-        eventDict.setdefault('category', eventDict['tag'])
-        eventDict.setdefault('appname', eventDict['tag'])
+        eventDict['appname'] = eventDict['tag']
         del eventDict['tag']
 
     if 'severity' in eventDict:
-        eventDict.setdefault('logLevel', LOG_LEVELS[eventDict['severity']])
+        eventDict['logLevel'] = LOG_LEVELS[eventDict['severity']]
         del eventDict['severity']
+
+    if (hostnames and eventDict.get('hostname') in hostnames):
+        eventDict['hostname'] = hostnames[eventDict['hostname']]
 
     return eventDict
 
 
-class SyslogDatagramProtocol(DatagramProtocol):
 
-    def __init__(self, callback):
-        self.callback = callback
+class SyslogDatagramProtocol(DatagramProtocol):
+    """
+    Datagram protocol for syslog.
+
+    This can be used with
+    C{UNIXDatagramServer<twisted.application.internet.UNIXDatagramServer} or
+    C{UDPServer<twisted.application.internet.UDPServer} to accept syslog events
+    over UNIX sockets or UDP respectively. See L{udplog.tap} for examples.
+    """
+
+    def __init__(self, callback, hostnames=None):
+        """
+        @param callback: Callback function that is called with a parsed
+            syslog event, with fields made consistent for UDPLog. See
+            L{parseSyslog} and L{syslogToUDPLogEvent} for details.
+        """
+        self._callback = callback
+        self._hostnames = hostnames
 
 
     def datagramReceived(self, datagram, addr):
-        eventDict = parseSyslog(datagram.decode('utf-8'), tz.gettz())
-        eventDict = syslogToUDPLogEvent(eventDict)
-        self.callback(eventDict)
+        eventDict = parseSyslog(datagram, tz.gettz())
+        eventDict = syslogToUDPLogEvent(eventDict, self._hostnames)
+        self._callback(eventDict)

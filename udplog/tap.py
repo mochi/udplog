@@ -8,6 +8,8 @@ Twisted Application set up for UDPLog.
 
 from __future__ import division, absolute_import
 
+import socket
+
 from twisted.application import service
 from twisted.application import internet
 from twisted.python import usage
@@ -94,21 +96,28 @@ def makeService(config):
     udplogServer.setServiceParent(s)
 
     # Set up syslog server
-    if (config['syslog-port'] is not None or
-        config['syslog-unix-socket'] is not None):
-        syslogProtocol = syslog.SyslogDatagramProtocol(dispatcher.eventReceived)
+    if (config.get('syslog-port') is not None or
+        config.get('syslog-unix-socket') is not None):
+        hostname = socket.gethostname()
+        hostnames = {
+            hostname.split('.')[0]: hostname,
+            '': hostname
+        }
+        syslogProtocol = syslog.SyslogDatagramProtocol(
+            dispatcher.eventReceived, hostnames=hostnames)
 
-        if config['syslog-unix-socket'] is not None:
+        if config.get('syslog-unix-socket') is not None:
             syslogServer = internet.UNIXDatagramServer(
                 address=config['syslog-unix-socket'],
                 protocol=syslogProtocol,
                 maxPacketSize=65536)
             syslogServer.setServiceParent(s)
-        if config['syslog-port'] is not None:
-            syslogServer = internet.UDPServer(port=config['syslog-port'],
-                                              protocol=syslogProtocol,
-                                              interface=config['syslog-interface'],
-                                              maxPacketSize=65536)
+        if config.get('syslog-port') is not None:
+            syslogServer = internet.UDPServer(
+                port=config['syslog-port'],
+                protocol=syslogProtocol,
+                interface=config.get('syslog-interface', ''),
+                maxPacketSize=65536)
             syslogServer.setServiceParent(s)
 
 
